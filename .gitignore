@@ -1,0 +1,96 @@
+# ======================================================
+# Little Sparks eLearning — wp-content/.gitignore
+# Strategy: ignore everything by default, explicitly
+#           un-ignore only custom/owned code.
+# Tracks:   child theme + custom plugins + custom mu-plugins
+# ======================================================
+
+
+# === THEMES ===
+# Ignore all themes — only track our child theme
+themes/*
+!themes/little-sparks-theme/
+
+# Dev reference files inside child theme (not production code)
+themes/little-sparks-theme/_reference-*.html
+
+
+# === PLUGINS ===
+# Ignore all third-party plugins
+plugins/*
+
+# Un-comment as you create custom plugins:
+# !plugins/ls-cpd-certificates/
+# !plugins/ls-course-access/
+
+
+# === MU-PLUGINS ===
+# Ignore LocalWP-specific helper (dev environment only)
+mu-plugins/local-by-flywheel-live-link-helper.php
+
+# Un-comment as you create custom mu-plugins:
+# !mu-plugins/ls-custom-functions.php
+
+
+# === NOVAMIRA MCP ===
+# Local dev tool only — never goes to staging or production
+plugins/novamira/
+plugins/novamira-*/
+novamira-sandbox/
+novamira-config.json
+
+
+# === WP RUNTIME / GENERATED ===
+uploads/
+languages/
+ai1wm-backups/
+upgrade/
+upgrade-temp-backup/
+index.php
+*.log
+debug.log
+error_log
+*.bak
+
+
+# === AI / DEV TOOL ARTIFACTS ===
+**/.claude/
+**/.claude-code/
+**/CLAUDE.md
+**/PROJECT-CONTEXT.md
+**/*.context.md
+**/.dev/
+**/.cursorrules
+**/.aider*
+.mcp.json
+
+
+# === OS / EDITOR ===
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+
+# === SECRETS ===
+.env
+.env.*
+wp-config-local.php
+
+
+# === BUILD ARTIFACTS ===
+node_modules/
+dist/
+build/
+
+
+# === TESTS ===
+test/
+tests/
+__tests__/
+phpunit.xml
+phpunit.xml.dist
