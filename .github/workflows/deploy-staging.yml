@@ -1,0 +1,39 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SFTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.STAGING_SFTP_HOST }}
+          username: ${{ secrets.STAGING_SFTP_USER }}
+          password: ${{ secrets.STAGING_SFTP_PASS }}
+          protocol: ftps
+          port: 21
+          server-dir: /public_html/wp-content/
+          local-dir: ./
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/.gitignore
+            **/.dev/**
+            **/CLAUDE.md
+            **/PROJECT-CONTEXT.md
+            **/.claude/**
+            **/.claude-code/**
+            **/node_modules/**
+            **/README.md
+            **/NOTES.md
+            **/TODO.md
+            **/*.log
