@@ -23,7 +23,7 @@ jobs:
           
           # DESTINATION ON SERVER: 
           # Assuming your FTP user starts at /home/user/, this targets the staging folder directly.
-          server-dir: /staging/wp-content/
+          server-dir: ../staging/wp-content/
           
           # SOURCE FROM GITHUB REPO:
           # If your repo's files are inside a "public_html/wp-content" folder, 
