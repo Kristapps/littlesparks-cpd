@@ -29,7 +29,7 @@ jobs:
           # If your repo's files are inside a "public_html/wp-content" folder, 
           # this tells the action to ONLY grab the contents inside that folder, 
           # preventing the "Matryoshka doll" nesting effect.
-          local-dir: ./public_html/wp-content/
+          local-dir: ./
           
           dangerous-clean-slate: false
           exclude: |
