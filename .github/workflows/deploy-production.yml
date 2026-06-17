@@ -20,7 +20,7 @@ jobs:
           password: ${{ secrets.PRODUCTION_SFTP_PASS }}
           protocol: ftps
           port: 21
-          server-dir: /public_html/wp-content/
+          server-dir: ./
           local-dir: ./
           dangerous-clean-slate: false
           exclude: |
