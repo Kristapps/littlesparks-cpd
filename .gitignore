@@ -44,6 +44,8 @@ novamira-config.json
 uploads/
 languages/
 ai1wm-backups/
+backup-dup-lite/
+backups-dup-lite/
 upgrade/
 upgrade-temp-backup/
 index.php

@@ -443,3 +443,128 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
     .newsletter-input   { width: 100%; box-sizing: border-box; }
     .newsletter-btn     { width: 100%; }
 }
+
+/* ---- CookieYes banner ---- */
+.cky-consent-bar {
+    border-color: var(--clr-border) !important;
+    background-color: var(--clr-surface) !important;
+    font-family: var(--font-main) !important;
+}
+
+.cky-title {
+    color: var(--clr-text-main) !important;
+    font-family: var(--font-main) !important;
+    font-weight: 600 !important;
+}
+
+.cky-notice-des,
+.cky-notice-des p {
+    color: var(--clr-text-muted) !important;
+    font-family: var(--font-main) !important;
+}
+
+.cky-btn {
+    border-radius: var(--radius-pill) !important;
+    font-family: var(--font-main) !important;
+    font-weight: 500 !important;
+    transition: opacity 0.2s ease !important;
+}
+
+.cky-btn-customize,
+.cky-btn-reject {
+    color: var(--clr-dark) !important;
+    border-color: var(--clr-dark) !important;
+    background-color: transparent !important;
+}
+
+.cky-btn-customize:hover,
+.cky-btn-reject:hover {
+    background-color: var(--clr-lavender) !important;
+}
+
+.cky-btn-accept {
+    color: #ffffff !important;
+    border-color: var(--clr-dark) !important;
+    background-color: var(--clr-dark) !important;
+}
+
+.cky-btn-accept:hover {
+    opacity: 0.9 !important;
+}
+
+[data-cky-tag="powered-by"],
+[data-cky-tag="detail-powered-by"] {
+    opacity: 0.5 !important;
+    font-size: 11px !important;
+}
+
+/* CookieYes preference modal */
+.cky-preference-center {
+    color: var(--clr-text-main) !important;
+    border-color: var(--clr-border) !important;
+    background-color: var(--clr-surface) !important;
+    font-family: var(--font-main) !important;
+}
+
+.cky-preference-title {
+    color: var(--clr-text-main) !important;
+    font-family: var(--font-main) !important;
+    font-weight: 600 !important;
+}
+
+.cky-preference-content-wrapper,
+.cky-preference-content-wrapper p,
+.cky-accordion-header-des,
+.cky-accordion-header-des p {
+    color: var(--clr-text-muted) !important;
+    font-family: var(--font-main) !important;
+}
+
+.cky-show-desc-btn {
+    color: var(--clr-dark) !important;
+    font-family: var(--font-main) !important;
+}
+
+.cky-horizontal-separator {
+    border-color: var(--clr-border) !important;
+}
+
+.cky-accordion-btn {
+    color: var(--clr-text-main) !important;
+    font-family: var(--font-main) !important;
+    font-weight: 500 !important;
+}
+
+.cky-chevron-right {
+    border-color: var(--clr-dark) !important;
+}
+
+.cky-always-active {
+    color: var(--clr-dark) !important;
+    font-family: var(--font-main) !important;
+}
+
+.cky-audit-table {
+    color: var(--clr-text-muted) !important;
+    border-color: var(--clr-border) !important;
+    background-color: var(--clr-lavender) !important;
+}
+
+.cky-switch input:checked {
+    background-color: var(--clr-dark) !important;
+}
+
+.cky-btn-preferences {
+    color: var(--clr-dark) !important;
+    border-color: var(--clr-dark) !important;
+    background-color: transparent !important;
+}
+
+.cky-btn-preferences:hover {
+    background-color: var(--clr-lavender) !important;
+}
+
+.cky-footer-shadow {
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--clr-surface) 100%) !important;
+}
+}
