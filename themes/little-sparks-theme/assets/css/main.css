@@ -567,4 +567,8 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 .cky-footer-shadow {
     background: linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--clr-surface) 100%) !important;
 }
+
+.cky-btn-revisit-wrapper {
+    background-color: var(--clr-dark) !important;
+}
 }
