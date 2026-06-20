@@ -96,3 +96,4 @@ tests/
 __tests__/
 phpunit.xml
 phpunit.xml.dist
+/themes/little-sparks-theme/inc/page-snippets
