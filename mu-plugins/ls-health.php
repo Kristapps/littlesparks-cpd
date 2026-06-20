@@ -213,20 +213,31 @@ function ls_health_run_checks() {
 			: 'Class LearnDash_WooCommerce not found — install and activate the plugin on this environment.',
 	);
 
-	// Enrollment hook: walk $wp_filter directly. We check that the
-	// woocommerce_order_status_completed hook has at least one callback whose
-	// object is an instance of LearnDash_WooCommerce. This proves the
-	// integration is wired, not just that the plugin is installed.
-	$ld_hook_wired = false;
+	// Enrollment hook: walk $wp_filter directly. Handles all three patterns
+	// the LD WC Integration plugin may use: object instance, static method
+	// array, or standalone function name containing 'learndash'.
+	$ld_hook_wired  = false;
+	$ld_hook_detail = '';
 	if ( $wc_ld_class && isset( $wp_filter['woocommerce_order_status_completed'] ) ) {
 		foreach ( $wp_filter['woocommerce_order_status_completed']->callbacks as $callbacks ) {
 			foreach ( $callbacks as $cb ) {
-				if (
-					is_array( $cb['function'] ) &&
-					isset( $cb['function'][0] ) &&
-					$cb['function'][0] instanceof LearnDash_WooCommerce
-				) {
-					$ld_hook_wired = true;
+				$fn = $cb['function'];
+				// Pattern 1: object instance — array( $obj, 'method' )
+				if ( is_array( $fn ) && isset( $fn[0] ) && is_object( $fn[0] ) && $fn[0] instanceof LearnDash_WooCommerce ) {
+					$ld_hook_wired  = true;
+					$ld_hook_detail = 'LearnDash_WooCommerce instance::' . esc_html( $fn[1] );
+					break 2;
+				}
+				// Pattern 2: static method — array( 'LearnDash_WooCommerce', 'method' )
+				if ( is_array( $fn ) && isset( $fn[0] ) && is_string( $fn[0] ) && false !== stripos( $fn[0], 'LearnDash' ) ) {
+					$ld_hook_wired  = true;
+					$ld_hook_detail = esc_html( $fn[0] ) . '::' . esc_html( $fn[1] ) . ' (static)';
+					break 2;
+				}
+				// Pattern 3: standalone function — 'learndash_woocommerce_*'
+				if ( is_string( $fn ) && false !== stripos( $fn, 'learndash' ) ) {
+					$ld_hook_wired  = true;
+					$ld_hook_detail = 'function ' . esc_html( $fn );
 					break 2;
 				}
 			}
@@ -236,9 +247,9 @@ function ls_health_run_checks() {
 		'label'  => 'Enrollment hook wired on order completion',
 		'status' => $ld_hook_wired ? 'pass' : ( $wc_ld_class ? 'warn' : 'fail' ),
 		'detail' => $ld_hook_wired
-			? 'LearnDash_WooCommerce instance found in woocommerce_order_status_completed callbacks'
+			? 'Callback found: ' . $ld_hook_detail
 			: ( $wc_ld_class
-				? 'Plugin class exists but its instance is not hooked on woocommerce_order_status_completed. Check plugin settings or conflicts.'
+				? 'No LearnDash callback found on woocommerce_order_status_completed. Plugin may use a different hook — run simulation test to verify actual behaviour.'
 				: 'Plugin not loaded — cannot check hook.' ),
 	);
 
@@ -392,6 +403,24 @@ function ls_health_render_page() {
 		}
 		echo '</tbody></table><br>';
 	}
+
+	echo '<h2>LearnDash Raw Options (temp debug — remove after)</h2>';
+	echo '<pre style="background:#f0f0f0;padding:12px;max-width:900px;overflow:auto;font-size:11px;">';
+	$ld_option_keys = array(
+		'learndash_settings_courses_cpt',
+		'learndash_settings_lessons_cpt',
+		'learndash_settings_topics_cpt',
+		'learndash_settings_quizzes_cpt',
+		'learndash_settings_courses_builder',
+		'learndash_settings_lessons_access',
+		'learndash_settings_topics_access',
+	);
+	foreach ( $ld_option_keys as $key ) {
+		$val = get_option( $key );
+		echo esc_html( $key ) . ":\n";
+		echo esc_html( print_r( $val, true ) ) . "\n\n";
+	}
+	echo '</pre>';
 
 	echo '<h2>Live Tests</h2>';
 	echo '<p>';
