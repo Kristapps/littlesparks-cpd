@@ -5,6 +5,33 @@
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+// ---------------------------------------------------------------------------
+// Auto-protect LearnDash logs directory on every request.
+// Creates .htaccess denying direct HTTP access if not already present.
+// Runs on init so it covers both frontend and admin contexts.
+// ---------------------------------------------------------------------------
+add_action( 'init', 'ls_health_protect_ld_logs' );
+function ls_health_protect_ld_logs() {
+	$upload_dir = wp_upload_dir();
+	$logs_dir   = trailingslashit( $upload_dir['basedir'] ) . 'learndash/logs';
+	$htaccess   = $logs_dir . '/.htaccess';
+
+	if ( file_exists( $htaccess ) ) return;
+
+	if ( ! file_exists( $logs_dir ) ) {
+		wp_mkdir_p( $logs_dir );
+	}
+
+	$rules = "# Block direct HTTP access to LearnDash logs\n"
+		. "<FilesMatch \".*\">\n"
+		. "  Order Allow,Deny\n"
+		. "  Deny from all\n"
+		. "</FilesMatch>\n"
+		. "Options -Indexes\n";
+
+	file_put_contents( $htaccess, $rules );
+}
+
 add_action( 'admin_menu', 'ls_health_add_menu' );
 function ls_health_add_menu() {
 	add_management_page(
@@ -369,7 +396,136 @@ function ls_health_run_checks() {
 			: 'No Stripe gateway class found. Activate Payment Plugins for Stripe or check for conflicts.',
 	);
 
+	// LearnDash logs directory protection.
+	// Two-part check: (1) .htaccess file exists on disk, (2) HTTP request to
+	// the logs URL actually returns 403 — proves the server enforces the rule.
+	$upload_dir    = wp_upload_dir();
+	$logs_dir      = trailingslashit( $upload_dir['basedir'] ) . 'learndash/logs';
+	$htaccess_path = $logs_dir . '/.htaccess';
+	$htaccess_ok   = file_exists( $htaccess_path );
+
+	$sec[] = array(
+		'label'  => 'LD logs .htaccess exists',
+		'status' => $htaccess_ok ? 'pass' : 'fail',
+		'detail' => $htaccess_ok
+			? $htaccess_path
+			: '.htaccess missing — logs directory is unprotected on disk. Should auto-create on next page load.',
+	);
+
+	// HTTP probe: request the logs directory URL with a short timeout.
+	// A 403 or 404 means the server is blocking access. A 200 or 500 is a problem.
+	$logs_url    = trailingslashit( $upload_dir['baseurl'] ) . 'learndash/logs/';
+	$probe       = wp_remote_get( $logs_url, array( 'timeout' => 5, 'redirection' => 0 ) );
+	$probe_code  = is_wp_error( $probe ) ? 0 : wp_remote_retrieve_response_code( $probe );
+	$probe_ok    = in_array( $probe_code, array( 403, 404 ), true );
+
+	$sec[] = array(
+		'label'  => 'LD logs directory blocked via HTTP',
+		'status' => $probe_ok ? 'pass' : ( 0 === $probe_code ? 'warn' : 'fail' ),
+		'detail' => $probe_ok
+			? 'HTTP ' . $probe_code . ' returned for ' . esc_url( $logs_url ) . ' — directory not publicly accessible'
+			: ( 0 === $probe_code
+				? 'HTTP probe failed (' . ( is_wp_error( $probe ) ? $probe->get_error_message() : 'no response' ) . ') — check manually'
+				: 'HTTP ' . $probe_code . ' returned — directory may be publicly accessible. Check server config.' ),
+	);
+
 	$checks['Security'] = $sec;
+
+	// === LearnDash Settings =================================================
+	$lds = array();
+
+	$courses_cpt = get_option( 'learndash_settings_courses_cpt', array() );
+	$lessons_cpt = get_option( 'learndash_settings_lessons_cpt', array() );
+	$topics_cpt  = get_option( 'learndash_settings_topics_cpt', array() );
+	$quizzes_cpt = get_option( 'learndash_settings_quizzes_cpt', array() );
+
+	// Courses: archive on, RSS off, featured image supported, comments off.
+	$course_archive = ! empty( $courses_cpt['has_archive'] ) && 'yes' === $courses_cpt['has_archive'];
+	$lds[]          = array(
+		'label'  => 'Courses: archive page enabled',
+		'status' => $course_archive ? 'pass' : 'fail',
+		'detail' => $course_archive ? '/courses archive active' : 'has_archive not set to "yes" in learndash_settings_courses_cpt',
+	);
+
+	$course_feed = ! empty( $courses_cpt['has_feed'] );
+	$lds[]       = array(
+		'label'  => 'Courses: RSS feed disabled',
+		'status' => ! $course_feed ? 'pass' : 'warn',
+		'detail' => ! $course_feed ? 'has_feed empty — correct' : 'RSS feed is enabled for courses',
+	);
+
+	$course_thumbnail = isset( $courses_cpt['supports'] ) && in_array( 'thumbnail', $courses_cpt['supports'], true );
+	$lds[]            = array(
+		'label'  => 'Courses: featured image supported',
+		'status' => $course_thumbnail ? 'pass' : 'fail',
+		'detail' => $course_thumbnail ? 'thumbnail in supports array' : 'thumbnail missing from supports — add Featured Image in Course CPT settings',
+	);
+
+	$course_comments = isset( $courses_cpt['supports'] ) && in_array( 'comments', $courses_cpt['supports'], true );
+	$lds[]           = array(
+		'label'  => 'Courses: comments disabled',
+		'status' => ! $course_comments ? 'pass' : 'warn',
+		'detail' => ! $course_comments ? 'comments not in supports — correct' : 'Comments enabled on courses — disable in Course CPT settings',
+	);
+
+	// Lessons: login-only and enrolled-only enforced, no archive.
+	$lesson_login    = ! empty( $lessons_cpt['search_login_only'] ) && 'yes' === $lessons_cpt['search_login_only'];
+	$lesson_enrolled = ! empty( $lessons_cpt['search_enrolled_only'] ) && 'yes' === $lessons_cpt['search_enrolled_only'];
+	$lesson_archive  = ! empty( $lessons_cpt['has_archive'] );
+
+	$lds[] = array(
+		'label'  => 'Lessons: logged-in users only',
+		'status' => $lesson_login ? 'pass' : 'fail',
+		'detail' => $lesson_login ? 'search_login_only = yes' : 'Not set — non-logged-in users can access lesson URLs',
+	);
+	$lds[] = array(
+		'label'  => 'Lessons: enrolled users only',
+		'status' => $lesson_enrolled ? 'pass' : 'fail',
+		'detail' => $lesson_enrolled ? 'search_enrolled_only = yes' : 'Not set — logged-in but non-paying users can access lesson content',
+	);
+	$lds[] = array(
+		'label'  => 'Lessons: no public archive',
+		'status' => ! $lesson_archive ? 'pass' : 'warn',
+		'detail' => ! $lesson_archive ? 'has_archive empty — correct' : 'Lesson archive is public — disable in Lesson CPT settings',
+	);
+
+	// Topics: same access control as lessons.
+	$topic_login    = ! empty( $topics_cpt['search_login_only'] ) && 'yes' === $topics_cpt['search_login_only'];
+	$topic_enrolled = ! empty( $topics_cpt['search_enrolled_only'] ) && 'yes' === $topics_cpt['search_enrolled_only'];
+	$topic_archive  = ! empty( $topics_cpt['has_archive'] );
+
+	$lds[] = array(
+		'label'  => 'Topics: logged-in users only',
+		'status' => $topic_login ? 'pass' : 'fail',
+		'detail' => $topic_login ? 'search_login_only = yes' : 'Not set — non-logged-in users can access topic URLs',
+	);
+	$lds[] = array(
+		'label'  => 'Topics: enrolled users only',
+		'status' => $topic_enrolled ? 'pass' : 'fail',
+		'detail' => $topic_enrolled ? 'search_enrolled_only = yes' : 'Not set — logged-in but non-paying users can access topic content',
+	);
+	$lds[] = array(
+		'label'  => 'Topics: no public archive',
+		'status' => ! $topic_archive ? 'pass' : 'warn',
+		'detail' => ! $topic_archive ? 'has_archive empty — correct' : 'Topic archive is public — disable in Topic CPT settings',
+	);
+
+	// Quizzes: search off, no archive.
+	$quiz_search  = ! empty( $quizzes_cpt['include_in_search'] ) && 'yes' === $quizzes_cpt['include_in_search'];
+	$quiz_archive = ! empty( $quizzes_cpt['has_archive'] );
+
+	$lds[] = array(
+		'label'  => 'Quizzes: excluded from search',
+		'status' => ! $quiz_search ? 'pass' : 'warn',
+		'detail' => ! $quiz_search ? 'include_in_search empty — quizzes not publicly searchable' : 'Quizzes appear in search results — disable in Quiz CPT settings',
+	);
+	$lds[] = array(
+		'label'  => 'Quizzes: no public archive',
+		'status' => ! $quiz_archive ? 'pass' : 'warn',
+		'detail' => ! $quiz_archive ? 'has_archive empty — correct' : 'Quiz archive is public',
+	);
+
+	$checks['LearnDash Settings'] = $lds;
 
 	return $checks;
 }
@@ -403,24 +559,6 @@ function ls_health_render_page() {
 		}
 		echo '</tbody></table><br>';
 	}
-
-	echo '<h2>LearnDash Raw Options (temp debug — remove after)</h2>';
-	echo '<pre style="background:#f0f0f0;padding:12px;max-width:900px;overflow:auto;font-size:11px;">';
-	$ld_option_keys = array(
-		'learndash_settings_courses_cpt',
-		'learndash_settings_lessons_cpt',
-		'learndash_settings_topics_cpt',
-		'learndash_settings_quizzes_cpt',
-		'learndash_settings_courses_builder',
-		'learndash_settings_lessons_access',
-		'learndash_settings_topics_access',
-	);
-	foreach ( $ld_option_keys as $key ) {
-		$val = get_option( $key );
-		echo esc_html( $key ) . ":\n";
-		echo esc_html( print_r( $val, true ) ) . "\n\n";
-	}
-	echo '</pre>';
 
 	echo '<h2>Live Tests</h2>';
 	echo '<p>';
