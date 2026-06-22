@@ -19,6 +19,19 @@ function ls_get_enrolled_course_ids( $user_id = null ) {
 	return learndash_user_get_enrolled_courses( $user_id );
 }
 
+function ls_format_duration( $seconds ) {
+	$seconds = absint( $seconds );
+	if ( ! $seconds ) {
+		return '';
+	}
+	$hours   = floor( $seconds / HOUR_IN_SECONDS );
+	$minutes = floor( ( $seconds % HOUR_IN_SECONDS ) / MINUTE_IN_SECONDS );
+	$parts   = array();
+	if ( $hours )   $parts[] = $hours . ' Hour' . ( $hours > 1 ? 's' : '' );
+	if ( $minutes ) $parts[] = $minutes . ' Min';
+	return implode( ' ', $parts );
+}
+
 function ls_hero_course_shortcode() {
 	if ( ! ls_wc_active() ) {
 		return '';
@@ -46,13 +59,20 @@ function ls_hero_course_shortcode() {
 	$product  = wc_get_product( get_the_ID() );
 	$title    = get_the_title();
 	$url      = get_permalink();
-	$duration = get_field( 'course_duration' ) ?: '';
+	$duration = ls_format_duration( get_post_meta( get_the_ID(), '_learndash_course_grid_duration', true ) );
 	$type     = get_field( 'course_type' ) ?: '';
 	$rating   = get_field( 'course_rating' ) ?: '5.0';
 	$thumb_id = get_post_thumbnail_id();
 
+	if ( $product->is_on_sale() ) {
+		$price_display = wp_kses_post( wc_price( $product->get_sale_price() ) ) . ' <span>' . wp_kses_post( wc_price( $product->get_regular_price() ) ) . '</span>';
+	} else {
+		$price_display = wp_kses_post( wc_price( $product->get_regular_price() ) );
+	}
+
 	ob_start();
 	?>
+	<?php if ( $duration ) : ?>
 	<div class="float-module">
 		<div class="module-icon">
 			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
@@ -61,6 +81,7 @@ function ls_hero_course_shortcode() {
 		</div>
 		<span class="module-text"><?php echo esc_html( $duration ); ?></span>
 	</div>
+	<?php endif; ?>
 	<a href="<?php echo esc_url( $url ); ?>" class="main-card">
 		<?php if ( $thumb_id ) : ?>
 		<div class="main-img-wrapper">
@@ -70,7 +91,7 @@ function ls_hero_course_shortcode() {
 		<div class="card-header">
 			<h3 class="card-title"><?php echo esc_html( $title ); ?></h3>
 			<div class="card-meta-row">
-				<p class="card-subtitle"><?php echo esc_html( $type ); ?> &bull; <?php echo esc_html( $duration ); ?></p>
+				<p class="card-subtitle"><?php echo esc_html( $type ); ?><?php echo ( $type && $duration ) ? ' &bull; ' : ''; ?><?php echo esc_html( $duration ); ?></p>
 				<div class="card-rating">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--clr-accent)" stroke="var(--clr-accent)" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
 					<?php echo esc_html( number_format( (float) $rating, 1 ) ); ?>
@@ -78,7 +99,7 @@ function ls_hero_course_shortcode() {
 			</div>
 		</div>
 		<div class="card-footer">
-			<div class="price"><?php echo wp_kses_post( $product->get_price_html() ); ?></div>
+			<div class="price"><?php echo $price_display; ?></div>
 		</div>
 	</a>
 	<?php
@@ -117,9 +138,10 @@ function ls_courses_grid_shortcode() {
 		$url       = get_permalink();
 		$excerpt   = get_the_excerpt();
 		$thumb_id  = get_post_thumbnail_id();
-		$duration  = get_field( 'course_duration' ) ?: '';
+		$duration  = ls_format_duration( get_post_meta( get_the_ID(), '_learndash_course_grid_duration', true ) );
 		$level     = get_field( 'course_level' ) ?: '';
 		$rating    = get_field( 'course_rating' ) ?: '5.0';
+		$icon      = get_field( 'course_icon' );
 		$card_num  = $index + 1;
 		$tilt      = isset( $tilt_classes[ $index ] ) ? $tilt_classes[ $index ] : '';
 
@@ -147,6 +169,11 @@ function ls_courses_grid_shortcode() {
 					<div class="course-badge<?php echo 1 === $card_num ? '' : ' badge-purple'; ?>">
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"></polygon></svg>
 						<?php echo esc_html( $duration ); ?>
+					</div>
+					<?php endif; ?>
+					<?php if ( $icon && ! empty( $icon['url'] ) ) : ?>
+					<div class="course-float-icon<?php echo 1 !== $card_num ? ' icon-bounce' : ''; ?>">
+						<img src="<?php echo esc_url( $icon['url'] ); ?>" alt="<?php echo esc_attr( $icon['alt'] ); ?>" width="28" height="28" loading="lazy">
 					</div>
 					<?php endif; ?>
 				</div>

@@ -74,15 +74,6 @@ function ls_register_acf_field_groups() {
 		'title'  => 'Course Details',
 		'fields' => array(
 			array(
-				'key'          => 'field_course_duration',
-				'label'        => 'Duration',
-				'name'         => 'course_duration',
-				'type'         => 'text',
-				'required'     => 0,
-				'placeholder'  => 'e.g. 15 min or 2.5 Hours',
-				'instructions' => 'Shown on course cards and the hero feature card.',
-			),
-			array(
 				'key'         => 'field_course_type',
 				'label'       => 'Type',
 				'name'        => 'course_type',
@@ -115,6 +106,17 @@ function ls_register_acf_field_groups() {
 				'max'           => 5,
 				'step'          => 0.1,
 				'instructions'  => 'Out of 5. Shown on course cards.',
+			),
+			array(
+				'key'           => 'field_course_icon',
+				'label'         => 'Card Icon',
+				'name'          => 'course_icon',
+				'type'          => 'image',
+				'required'      => 0,
+				'return_format' => 'array',
+				'preview_size'  => 'thumbnail',
+				'library'       => 'all',
+				'instructions'  => 'Small decorative icon shown on the course card (28×28px, SVG or PNG).',
 			),
 		),
 		'location' => array(
