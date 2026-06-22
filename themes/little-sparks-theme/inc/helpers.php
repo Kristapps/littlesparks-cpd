@@ -27,8 +27,8 @@ function ls_format_duration( $seconds ) {
 	$hours   = floor( $seconds / HOUR_IN_SECONDS );
 	$minutes = floor( ( $seconds % HOUR_IN_SECONDS ) / MINUTE_IN_SECONDS );
 	$parts   = array();
-	if ( $hours )   $parts[] = $hours . ' Hour' . ( $hours > 1 ? 's' : '' );
-	if ( $minutes ) $parts[] = $minutes . ' Min';
+	if ( $hours )   $parts[] = $hours . 'h';
+	if ( $minutes ) $parts[] = $minutes . 'm';
 	return implode( ' ', $parts );
 }
 
@@ -148,12 +148,19 @@ function ls_courses_grid_shortcode() {
 		$terms    = get_the_terms( get_the_ID(), 'product_cat' );
 		$cat_name = '';
 		if ( $terms && ! is_wp_error( $terms ) ) {
+			$excluded = array( 'uncategorized', 'uncategorised' );
 			foreach ( $terms as $term ) {
-				if ( 'uncategorized' !== $term->slug ) {
+				if ( ! in_array( $term->slug, $excluded, true ) ) {
 					$cat_name = $term->name;
 					break;
 				}
 			}
+		}
+
+		if ( $product->is_on_sale() ) {
+			$price_html = wp_kses_post( wc_price( $product->get_sale_price() ) ) . ' <span>' . wp_kses_post( wc_price( $product->get_regular_price() ) ) . '</span>';
+		} else {
+			$price_html = wp_kses_post( wc_price( $product->get_regular_price() ) );
 		}
 
 		?>
@@ -195,7 +202,7 @@ function ls_courses_grid_shortcode() {
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
 							<span><?php echo esc_html( number_format( (float) $rating, 1 ) ); ?></span>
 						</div>
-						<div class="course-price"><?php echo wp_kses_post( $product->get_price_html() ); ?></div>
+						<div class="course-price"><?php echo $price_html; ?></div>
 					</div>
 				</div>
 			</a>
