@@ -60,7 +60,6 @@ function ls_hero_course_shortcode() {
 	$title    = get_the_title();
 	$url      = get_permalink();
 	$duration = ls_format_duration( get_post_meta( get_the_ID(), '_learndash_course_grid_duration', true ) );
-	$type     = get_field( 'course_type' ) ?: '';
 	$rating   = get_field( 'course_rating' ) ?: '5.0';
 	$thumb_id = get_post_thumbnail_id();
 
@@ -91,7 +90,7 @@ function ls_hero_course_shortcode() {
 		<div class="card-header">
 			<h3 class="card-title"><?php echo esc_html( $title ); ?></h3>
 			<div class="card-meta-row">
-				<p class="card-subtitle"><?php echo esc_html( $type ); ?><?php echo ( $type && $duration ) ? ' &bull; ' : ''; ?><?php echo esc_html( $duration ); ?></p>
+				<p class="card-subtitle"><?php echo esc_html( $duration ); ?></p>
 				<div class="card-rating">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--clr-accent)" stroke="var(--clr-accent)" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
 					<?php echo esc_html( number_format( (float) $rating, 1 ) ); ?>
@@ -173,7 +172,7 @@ function ls_courses_grid_shortcode() {
 					</div>
 					<?php endif; ?>
 					<?php if ( $duration ) : ?>
-					<div class="course-badge<?php echo 1 === $card_num ? '' : ' badge-purple'; ?>">
+					<div class="course-badge<?php echo ( 0 === $index % 2 ) ? '' : ' badge-purple'; ?>">
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"></polygon></svg>
 						<?php echo esc_html( $duration ); ?>
 					</div>
@@ -295,3 +294,41 @@ function ls_testimonials_grid_shortcode() {
 	return ob_get_clean();
 }
 add_shortcode( 'ls_testimonials_grid', 'ls_testimonials_grid_shortcode' );
+
+function ls_header_actions_shortcode() {
+	$account_page_id = get_option( 'woocommerce_myaccount_page_id' );
+	$account_url     = $account_page_id ? get_permalink( $account_page_id ) : wp_login_url();
+
+	if ( is_user_logged_in() ) {
+		$login_label = __( 'My Account', 'little-sparks-theme' );
+	} else {
+		$login_label = __( 'Login', 'little-sparks-theme' );
+	}
+
+	$cart_count = ( ls_wc_active() && WC()->cart ) ? WC()->cart->get_cart_contents_count() : 0;
+	$cart_url   = ls_wc_active() ? wc_get_cart_url() : '#';
+
+	ob_start();
+	?>
+	<div class="header-actions">
+		<a href="<?php echo esc_url( $account_url ); ?>" class="login-btn"><?php echo esc_html( $login_label ); ?></a>
+		<a href="<?php echo esc_url( $cart_url ); ?>" class="cart-link" aria-label="<?php echo esc_attr( sprintf( _n( 'View cart — %d item', 'View cart — %d items', $cart_count, 'little-sparks-theme' ), $cart_count ) ); ?>">
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--clr-text-main)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+				<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+				<line x1="3" y1="6" x2="21" y2="6"></line>
+				<path d="M16 10a4 4 0 0 1-8 0"></path>
+			</svg>
+			<?php if ( $cart_count > 0 ) : ?>
+			<span class="cart-badge"><?php echo esc_html( $cart_count ); ?></span>
+			<?php endif; ?>
+		</a>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+add_shortcode( 'ls_header_actions', 'ls_header_actions_shortcode' );
+
+function ls_copyright_shortcode() {
+	return '&copy; ' . esc_html( gmdate( 'Y' ) ) . ' Little Sparks eLearning';
+}
+add_shortcode( 'ls_copyright', 'ls_copyright_shortcode' );

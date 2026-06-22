@@ -74,14 +74,6 @@ function ls_register_acf_field_groups() {
 		'title'  => 'Course Details',
 		'fields' => array(
 			array(
-				'key'         => 'field_course_type',
-				'label'       => 'Type',
-				'name'        => 'course_type',
-				'type'        => 'text',
-				'required'    => 0,
-				'placeholder' => 'e.g. Masterclass, Workshop, Short Course',
-			),
-			array(
 				'key'     => 'field_course_level',
 				'label'   => 'Level',
 				'name'    => 'course_level',
