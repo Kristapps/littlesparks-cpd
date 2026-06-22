@@ -328,6 +328,14 @@ function ls_header_actions_shortcode() {
 }
 add_shortcode( 'ls_header_actions', 'ls_header_actions_shortcode' );
 
+function ls_nav_account_link_shortcode() {
+	$account_page_id = get_option( 'woocommerce_myaccount_page_id' );
+	$account_url     = $account_page_id ? get_permalink( $account_page_id ) : wp_login_url();
+	$label           = is_user_logged_in() ? __( 'My Account', 'little-sparks-theme' ) : __( 'Login', 'little-sparks-theme' );
+	return '<a href="' . esc_url( $account_url ) . '">' . esc_html( $label ) . '</a>';
+}
+add_shortcode( 'ls_nav_account_link', 'ls_nav_account_link_shortcode' );
+
 function ls_copyright_shortcode() {
 	return '&copy; ' . esc_html( gmdate( 'Y' ) ) . ' Little Sparks eLearning';
 }
