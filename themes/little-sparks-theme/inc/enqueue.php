@@ -2,7 +2,9 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 function ls_enqueue_assets() {
-	$version = wp_get_theme()->get( 'Version' );
+	$version = ( defined( 'WP_DEBUG' ) && WP_DEBUG )
+		? wp_get_theme()->get( 'Version' ) . '.' . time()
+		: wp_get_theme()->get( 'Version' );
 
 	wp_enqueue_style(
 		'hello-elementor',
