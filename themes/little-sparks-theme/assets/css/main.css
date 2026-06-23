@@ -340,6 +340,7 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 .form-field input::placeholder,.form-field textarea::placeholder { color:var(--clr-text-muted); opacity:0.7; }
 .form-field textarea { resize:vertical; min-height:120px; }
 .form-actions { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:1.25rem; flex-wrap:wrap; padding-top:0.5rem; }
+.form-actions .wpcf7-form-control-wrap[data-name="turnstile-1"] { flex-basis:100%; display:flex; justify-content:center; }
 .btn-submit { background:var(--clr-dark); color:var(--clr-surface); border:2px solid transparent; padding:1rem 2rem; box-shadow:0 10px 20px -5px rgba(148,57,212,0.3); display:inline-flex; align-items:center; gap:0.75rem; border-radius:var(--radius-pill); font-weight:700; font-size:1rem; font-family:var(--font-main); line-height:1.2; cursor:pointer; transition:var(--transition); box-sizing:border-box; }
 .btn-submit:hover { transform:translateY(-2px); background:#a848e8; }
 .form-or { font-size:0.9rem; color:var(--clr-text-muted); font-weight:500; }
