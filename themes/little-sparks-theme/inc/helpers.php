@@ -64,7 +64,7 @@ function ls_hero_course_shortcode() {
 	$thumb_id = get_post_thumbnail_id();
 
 	if ( $product->is_on_sale() ) {
-		$price_display = wp_kses_post( wc_price( $product->get_sale_price() ) ) . ' <span>' . wp_kses_post( wc_price( $product->get_regular_price() ) ) . '</span>';
+		$price_display = wp_kses_post( wc_price( $product->get_sale_price() ) ) . ' <span class="price-was">' . wp_kses_post( wc_price( $product->get_regular_price() ) ) . '</span>';
 	} else {
 		$price_display = wp_kses_post( wc_price( $product->get_regular_price() ) );
 	}
@@ -157,7 +157,7 @@ function ls_courses_grid_shortcode() {
 		}
 
 		if ( $product->is_on_sale() ) {
-			$price_html = wp_kses_post( wc_price( $product->get_sale_price() ) ) . ' <span>' . wp_kses_post( wc_price( $product->get_regular_price() ) ) . '</span>';
+			$price_html = wp_kses_post( wc_price( $product->get_sale_price() ) ) . ' <span class="price-was">' . wp_kses_post( wc_price( $product->get_regular_price() ) ) . '</span>';
 		} else {
 			$price_html = wp_kses_post( wc_price( $product->get_regular_price() ) );
 		}

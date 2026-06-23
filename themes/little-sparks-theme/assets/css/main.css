@@ -174,7 +174,7 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 .card-rating { display:flex; align-items:center; gap:0.25rem; background:var(--clr-accent-light); padding:0.35rem 0.6rem; border-radius:var(--radius-pill); font-size:0.8rem; font-weight:700; color:var(--clr-accent); }
 .card-footer { display:flex; justify-content:space-between; align-items:center; padding-top:1rem; border-top:1px dashed var(--clr-border); }
 .price { font-size:1.25rem; font-weight:700; color:var(--clr-text-main); }
-.price span { font-size:0.875rem; color:var(--clr-text-muted); text-decoration:line-through; margin-left:0.5rem; font-weight:400; }
+.price .price-was { font-size:0.875rem; color:var(--clr-text-muted); text-decoration:line-through; margin-left:0.5rem; font-weight:400; }
 .app-btn-small { background:var(--clr-dark); color:var(--clr-surface); padding:0.6rem 1.2rem; border-radius:var(--radius-pill); font-size:0.875rem; font-weight:700; border:none; cursor:pointer; display:flex; align-items:center; gap:0.5rem; }
 .float-module { position:absolute; top:10%; left:-10%; background:var(--clr-surface); padding:0.75rem 1.25rem; border-radius:var(--radius-pill); box-shadow:0 12px 32px -4px rgba(148,57,212,0.22),0 2px 8px rgba(0,0,0,0.07); display:flex; align-items:center; gap:0.75rem; z-index:3; animation:float 6s ease-in-out infinite; }
 .module-icon { width:32px; height:32px; background:var(--clr-accent); border-radius:50%; display:flex; align-items:center; justify-content:center; }
