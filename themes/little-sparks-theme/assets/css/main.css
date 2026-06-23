@@ -359,7 +359,7 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 .wpcf7-spinner { display:none; }
 .wpcf7-not-valid-tip { font-size:0.8rem; color:#c0392b; margin-top:0.25rem; display:block; }
 .wpcf7-response-output { border-radius:var(--radius-sm) !important; padding:1rem 1.25rem !important; font-weight:600; text-align:center; margin-top:0.5rem !important; border:none !important; }
-.wpcf7-form.sent .wpcf7-response-output { background:var(--clr-accent-light); color:var(--clr-accent); }
+.wpcf7-form.sent .wpcf7-response-output { background:#e8f5ee; color:#1a7a4a; }
 .wpcf7-form.failed .wpcf7-response-output,.wpcf7-form.invalid .wpcf7-response-output,.wpcf7-form.spam .wpcf7-response-output { background:#fdf0f0; color:#c0392b; }
 
 /* ---- 12. Footer ---- */
