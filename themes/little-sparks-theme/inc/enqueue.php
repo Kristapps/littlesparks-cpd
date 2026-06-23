@@ -2,7 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 function ls_enqueue_assets() {
-	$version = ( defined( 'WP_DEBUG' ) && WP_DEBUG )
+	$version = ( 'production' !== wp_get_environment_type() )
 		? wp_get_theme()->get( 'Version' ) . '.' . time()
 		: wp_get_theme()->get( 'Version' );
 
