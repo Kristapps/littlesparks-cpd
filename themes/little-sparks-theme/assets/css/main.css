@@ -322,6 +322,22 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 .icon-1 { top:-25px; right:40px; animation:gentleBounce 4s ease-in-out infinite; }
 .icon-2 { bottom:-20px; left:30px; animation:gentleBounce 5s ease-in-out infinite 1s; }
 
+/* ---- Fluent Forms ---- */
+.fluentform { display:flex; flex-direction:column; gap:1.5rem; }
+.ff-el-group { display:flex; flex-direction:column; gap:0.5rem; }
+.ff-el-input--label label { font-size:0.85rem; font-weight:700; color:var(--clr-text-main); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0; }
+.ff-el-form-control { padding:1rem 1.25rem; border:2px solid var(--clr-border); border-radius:16px; font-family:var(--font-main); font-size:1rem; color:var(--clr-text-main); background:var(--clr-bg); transition:var(--transition); outline:none; width:100%; box-sizing:border-box; }
+.ff-el-form-control:focus { border-color:var(--clr-accent); background:var(--clr-surface); box-shadow:0 0 0 4px var(--clr-accent-light); }
+.ff-el-form-control::placeholder { color:var(--clr-text-muted); opacity:0.7; }
+textarea.ff-el-form-control { resize:vertical; min-height:120px; }
+.ff-el-group.ff-el-is-error .ff-el-form-control { border-color:#c0392b; }
+.ff-field__help,.error.text { font-size:0.8rem; color:#c0392b; margin-top:0.25rem; }
+.ff-t-container { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+.ff-btn-container { display:flex; justify-content:center; padding-top:0.5rem; }
+.ff-btn.ff-btn-md { background:var(--clr-dark); color:var(--clr-surface); border:none; padding:1rem 2rem; box-shadow:0 10px 20px -5px rgba(148,57,212,0.3); display:inline-flex; align-items:center; gap:0.75rem; border-radius:var(--radius-pill); font-weight:700; font-size:1rem; cursor:pointer; transition:var(--transition); font-family:var(--font-main); }
+.ff-btn.ff-btn-md:hover { transform:translateY(-2px); background:#a848e8; }
+.ff-message-success { background:var(--clr-accent-light); color:var(--clr-accent); border-radius:var(--radius-sm); padding:1rem 1.25rem; font-weight:600; text-align:center; margin-top:0.5rem; }
+
 /* ---- Footer ---- */
 .site-footer { max-width:1440px; margin:0 auto; padding:5rem 0 3rem; position:relative; overflow:visible; }
 .footer-blob { position:absolute; z-index:0; pointer-events:none; }
@@ -430,6 +446,7 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
     .form-row          { grid-template-columns: 1fr; }
     .form-actions      { flex-direction: column; align-items: stretch; }
     .form-or           { text-align: center; }
+    .ff-t-container    { grid-template-columns: 1fr; }
 }
 
 /* ---- Responsive: 640px ---- */
