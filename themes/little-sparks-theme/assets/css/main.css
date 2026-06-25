@@ -876,3 +876,371 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 	.learndash-wrapper .ld-table-list-item { padding-left: 2rem; }
 	.learndash-wrapper .ld-section-heading { padding: 1rem 1.25rem; }
 }
+
+/* ==========================================================================
+   24. WooCommerce My Account
+   ========================================================================== */
+
+.woocommerce-account .woocommerce {
+	display: grid;
+	grid-template-columns: 220px 1fr;
+	gap: 2rem;
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 2.5rem 1.5rem 5rem;
+	align-items: start;
+}
+
+/* Notices span full width above both columns */
+.woocommerce-account .woocommerce > .woocommerce-notices-wrapper {
+	grid-column: 1 / -1;
+}
+
+/* Remove decorative underlines from all account-area links */
+.woocommerce-account a { text-decoration: none; }
+
+/* --- Nav sidebar --- */
+.woocommerce-MyAccount-navigation {
+	background: var(--clr-surface);
+	border-radius: var(--radius-card);
+	padding: 0.75rem;
+	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+	overflow: hidden;
+}
+
+.woocommerce-MyAccount-navigation ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	position: sticky;
+	top: 100px;
+}
+
+.woocommerce-MyAccount-navigation-link a,
+.woocommerce-MyAccount-navigation-link a:hover,
+.woocommerce-MyAccount-navigation-link a:visited,
+.woocommerce-MyAccount-navigation-link a:focus { text-decoration: none !important; }
+
+.woocommerce-MyAccount-navigation-link a {
+	display: flex;
+	align-items: center;
+	padding: 0.65rem 1rem;
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--clr-text-muted);
+	background: transparent;
+	transition: var(--transition);
+}
+
+.woocommerce-MyAccount-navigation-link a:hover {
+	background: var(--clr-lavender);
+	color: var(--clr-dark);
+}
+
+.woocommerce-MyAccount-navigation-link.is-active a {
+	background: var(--clr-dark);
+	color: #fff;
+	font-weight: 600;
+}
+
+/* --- Content panel --- */
+.woocommerce-MyAccount-content {
+	background: var(--clr-surface);
+	border-radius: var(--radius-card);
+	padding: 2rem;
+	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+	min-height: 280px;
+}
+
+/* --- Dashboard --- */
+.ls-account-welcome {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: var(--clr-text-main);
+	margin: 0 0 1.5rem;
+}
+
+.ls-account-stats {
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 1.75rem;
+}
+
+.ls-account-stat {
+	background: var(--clr-bg);
+	border: 1.5px solid var(--clr-border);
+	border-radius: var(--radius-card);
+	padding: 1.25rem 1.5rem;
+	flex: 1;
+	min-width: 120px;
+	text-align: center;
+}
+
+.ls-account-stat-num {
+	display: block;
+	font-size: 2.25rem;
+	font-weight: 800;
+	color: var(--clr-dark);
+	line-height: 1;
+	margin-bottom: 0.35rem;
+}
+
+.ls-account-stat-label {
+	font-size: 0.82rem;
+	color: var(--clr-text-muted);
+	font-weight: 500;
+}
+
+.ls-account-dashboard-cta { margin-top: 0.25rem; }
+.ls-account-dashboard-cta p { color: var(--clr-text-muted); margin-bottom: 1rem; }
+
+/* --- My Courses grid --- */
+.ls-my-courses-empty {
+	text-align: center;
+	padding: 3rem 1rem;
+	color: var(--clr-text-muted);
+}
+.ls-my-courses-empty p { margin-bottom: 1.25rem; font-size: 1.05rem; }
+
+.ls-my-courses-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 1.25rem;
+}
+
+/* --- Course card --- */
+.ls-course-card {
+	background: var(--clr-bg);
+	border: 1.5px solid var(--clr-border);
+	border-radius: var(--radius-card);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	transition: var(--transition);
+}
+.ls-course-card:hover {
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+	transform: translateY(-2px);
+}
+
+.ls-course-card-img-wrap {
+	display: block;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+}
+.ls-course-card-img-wrap img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.4s ease;
+}
+.ls-course-card:hover .ls-course-card-img-wrap img { transform: scale(1.04); }
+
+.ls-course-card-body {
+	padding: 1.1rem 1.25rem 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	flex: 1;
+}
+
+.ls-course-card-status {
+	display: inline-block;
+	width: fit-content;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 0.2rem 0.6rem;
+	border-radius: var(--radius-pill);
+}
+.ls-status-new      { background: var(--clr-lavender); color: var(--clr-dark); }
+.ls-status-progress { background: #fef3c7; color: #92400e; }
+.ls-status-complete { background: #d1fae5; color: #065f46; }
+
+.ls-course-card-title {
+	font-size: 0.975rem;
+	font-weight: 700;
+	line-height: 1.35;
+	margin: 0.15rem 0 0;
+}
+.ls-course-card-title a { color: var(--clr-text-main); text-decoration: none; transition: var(--transition); }
+.ls-course-card-title a:hover { color: var(--clr-dark); }
+
+.ls-course-card-progress {
+	height: 6px;
+	background: var(--clr-border);
+	border-radius: var(--radius-pill);
+	overflow: hidden;
+}
+.ls-course-card-progress-fill {
+	height: 100%;
+	background: var(--clr-dark);
+	border-radius: var(--radius-pill);
+	transition: width 0.4s ease;
+}
+
+.ls-course-card-steps {
+	font-size: 0.78rem;
+	color: var(--clr-text-muted);
+	margin: 0;
+}
+
+.ls-course-card-actions {
+	display: flex;
+	gap: 0.6rem;
+	flex-wrap: wrap;
+	margin-top: auto;
+	padding-top: 0.6rem;
+}
+
+/* --- Shared buttons (My Account scope) — mirrors .login-btn style --- */
+.ls-btn,
+.ls-btn:hover,
+.ls-btn:visited,
+.ls-btn:focus { text-decoration: none !important; }
+
+.ls-btn {
+	display: inline-block;
+	padding: 0.75rem 1.5rem;
+	border-radius: var(--radius-pill);
+	border: 2px solid var(--clr-border);
+	font-family: var(--font-body);
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--clr-text-main);
+	background: transparent;
+	cursor: pointer;
+	transition: var(--transition);
+	line-height: 1.3;
+}
+.ls-btn:hover { border-color: var(--clr-accent); color: var(--clr-accent); }
+
+.ls-btn-primary { border-color: var(--clr-border); color: var(--clr-text-main); }
+.ls-btn-primary:hover { border-color: var(--clr-accent); color: var(--clr-accent); }
+
+.ls-btn-secondary { border-color: var(--clr-border); color: var(--clr-text-muted); }
+.ls-btn-secondary:hover { border-color: var(--clr-accent); color: var(--clr-accent); }
+
+/* --- Orders table --- */
+.woocommerce-orders-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+}
+.woocommerce-orders-table thead th {
+	text-align: left;
+	padding: 0.7rem 1rem;
+	font-weight: 700;
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--clr-text-muted);
+	border-bottom: 2px solid var(--clr-border);
+}
+.woocommerce-orders-table tbody td {
+	padding: 0.875rem 1rem;
+	border-bottom: 1px solid var(--clr-border);
+	color: var(--clr-text-main);
+	vertical-align: middle;
+}
+.woocommerce-orders-table tbody tr:last-child td { border-bottom: none; }
+.woocommerce-orders-table .button,
+.woocommerce-orders-table a.button {
+	background: var(--clr-dark);
+	color: #fff;
+	padding: 0.4rem 0.9rem;
+	border-radius: var(--radius-pill);
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-decoration: none;
+	border: none;
+	display: inline-block;
+}
+
+/* --- Account details form --- */
+.woocommerce-edit-account fieldset {
+	border: 1.5px solid var(--clr-border);
+	border-radius: var(--radius-card);
+	padding: 1.5rem;
+	margin-bottom: 1.5rem;
+}
+.woocommerce-edit-account legend {
+	font-weight: 700;
+	color: var(--clr-text-main);
+	padding: 0 0.5rem;
+	font-size: 1rem;
+}
+.woocommerce-account .form-row label {
+	display: block;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--clr-text-main);
+	margin-bottom: 0.35rem;
+}
+.woocommerce-account .form-row input[type="text"],
+.woocommerce-account .form-row input[type="email"],
+.woocommerce-account .form-row input[type="password"] {
+	width: 100%;
+	max-width: 420px;
+	border: 1.5px solid var(--clr-border);
+	border-radius: var(--radius-sm);
+	padding: 0.6rem 0.875rem;
+	font-family: var(--font-body);
+	font-size: 0.9rem;
+	color: var(--clr-text-main);
+	background: var(--clr-bg);
+	transition: var(--transition);
+}
+.woocommerce-account .form-row input:focus {
+	outline: none;
+	border-color: var(--clr-dark);
+	box-shadow: 0 0 0 3px rgba(148, 57, 212, 0.12);
+}
+.woocommerce-account input[type="submit"],
+.woocommerce-account button[type="submit"] {
+	background: var(--clr-dark);
+	color: #fff;
+	border: none;
+	border-radius: var(--radius-pill);
+	padding: 0.65rem 1.75rem;
+	font-family: var(--font-body);
+	font-size: 0.925rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: var(--transition);
+}
+.woocommerce-account input[type="submit"]:hover,
+.woocommerce-account button[type="submit"]:hover { background: var(--clr-text-main); }
+
+/* WC messages inside account */
+.woocommerce-MyAccount-content .woocommerce-message,
+.woocommerce-MyAccount-content .woocommerce-error,
+.woocommerce-MyAccount-content .woocommerce-info { margin-bottom: 1.5rem; border-radius: var(--radius-sm); }
+
+/* ---- 24a. My Account responsive ---- */
+@media (max-width: 768px) {
+	.woocommerce-account .woocommerce {
+		grid-template-columns: 1fr;
+		padding: 1rem 1rem 3rem;
+		gap: 1rem;
+	}
+	.woocommerce-MyAccount-navigation ul {
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		position: static;
+	}
+	.woocommerce-MyAccount-navigation-link a {
+		padding: 0.45rem 0.875rem;
+		font-size: 0.85rem;
+	}
+	.woocommerce-MyAccount-content { padding: 1.25rem; }
+	.ls-my-courses-grid { grid-template-columns: 1fr; }
+	.ls-account-stats { gap: 0.75rem; }
+}
