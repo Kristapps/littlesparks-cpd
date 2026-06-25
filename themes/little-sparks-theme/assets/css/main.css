@@ -708,3 +708,171 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 
 /* ---- 22b. Course card link wrapper ---- */
 .course-card-inner { display: block; text-decoration: none; color: inherit; height: 100%; }
+
+/* ---- 23. LearnDash single course page ---- */
+
+/* Hero header */
+.ls-course-hero { margin-bottom: 2rem; }
+
+.ls-course-hero-img-wrap { border-radius: var(--radius-card); overflow: hidden; aspect-ratio: 16 / 7; margin-bottom: 1.75rem; }
+.ls-course-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.ls-course-hero-body { max-width: 780px; }
+
+.ls-course-title { font-size: clamp(1.6rem, 2.8vw, 2.5rem); line-height: 1.15; letter-spacing: -0.03em; color: var(--clr-text-main); margin-bottom: 1rem; }
+
+.ls-course-excerpt { font-size: 1.0625rem; color: var(--clr-text-muted); line-height: 1.65; margin-bottom: 1.25rem; }
+
+.ls-course-meta-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.ls-meta-pill { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: var(--radius-pill); }
+.ls-meta-cat { background: var(--clr-lavender); color: var(--clr-dark); }
+.ls-meta-level { background: var(--clr-accent-light); color: #7a4800; }
+.ls-meta-duration { background: var(--clr-surface); color: var(--clr-text-muted); border: 1px solid var(--clr-border); }
+
+/* LD infobar — purchase card */
+.learndash-wrapper .ld-course-status {
+	background: var(--clr-surface);
+	border: 1.5px solid var(--clr-border);
+	border-radius: var(--radius-card);
+	box-shadow: var(--shadow-float);
+	padding: 1.75rem 2rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1.25rem;
+	margin-bottom: 2rem;
+}
+
+/* Status / price / action segments */
+.learndash-wrapper .ld-course-status-segment { flex: 1 1 auto; }
+.learndash-wrapper .ld-course-status-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--clr-text-muted); margin: 0 0 0.35rem; }
+.learndash-wrapper .ld-course-status-content { display: flex; align-items: center; }
+
+/* Price */
+.learndash-wrapper .ld-course-status-price { font-size: 2rem; font-weight: 800; color: var(--clr-dark); line-height: 1; }
+
+/* Status bubble (enrolled) */
+.learndash-wrapper .ld-status { font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.85rem; border-radius: var(--radius-pill); }
+.learndash-wrapper .ld-status-progress { background: var(--clr-lavender); color: var(--clr-dark); }
+.learndash-wrapper .ld-status-complete { background: #d1fae5; color: #065f46; }
+.learndash-wrapper .ld-status-waiting { background: var(--clr-accent-light); color: #7a4800; }
+
+/* Buy / enroll button — covers WC add-to-cart link, LD button, and login link */
+.learndash-wrapper .ld-course-status-action a,
+.learndash-wrapper .ld-course-status-action .ld-button,
+.learndash-wrapper .ld-course-status-action button.ld-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.875rem 2rem;
+	border-radius: var(--radius-pill);
+	background: var(--clr-dark);
+	color: #fff;
+	font-family: var(--font-main);
+	font-size: 1rem;
+	font-weight: 700;
+	text-decoration: none;
+	border: none;
+	cursor: pointer;
+	box-shadow: 0 10px 20px -5px rgba(148, 57, 212, 0.3);
+	transition: var(--transition);
+	white-space: nowrap;
+}
+.learndash-wrapper .ld-course-status-action a:hover,
+.learndash-wrapper .ld-course-status-action .ld-button:hover,
+.learndash-wrapper .ld-course-status-action button.ld-button:hover {
+	background: #7b2db5;
+	box-shadow: 0 14px 24px -5px rgba(148, 57, 212, 0.4);
+	transform: translateY(-1px);
+}
+
+/* Our custom enrol button (ls_wc_buy_button) */
+.learndash-wrapper .ld-course-status-action .ls-enrol-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.875rem 2rem;
+	border-radius: var(--radius-pill);
+	background: var(--clr-dark);
+	color: #fff !important;
+	font-family: var(--font-main);
+	font-size: 1rem;
+	font-weight: 700;
+	text-decoration: none;
+	border: none;
+	box-shadow: 0 10px 20px -5px rgba(148, 57, 212, 0.3);
+	transition: var(--transition);
+	white-space: nowrap;
+}
+.learndash-wrapper .ld-course-status-action .ls-enrol-btn:hover {
+	background: #7b2db5;
+	box-shadow: 0 14px 24px -5px rgba(148, 57, 212, 0.4);
+	transform: translateY(-1px);
+	color: #fff !important;
+}
+
+/* "or Log In" text */
+.learndash-wrapper .ld-course-status-action .ld-text { font-size: 0.875rem; color: var(--clr-text-muted); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
+.learndash-wrapper .ld-login-text { color: var(--clr-dark); font-weight: 600; text-decoration: underline; background: none; border: none; cursor: pointer; font-size: inherit; }
+
+/* Progress bar (enrolled users) */
+.learndash-wrapper .ld-progress { width: 100%; }
+.learndash-wrapper .ld-progress-bar { background: var(--clr-lavender); border-radius: var(--radius-pill); height: 8px; overflow: hidden; margin-bottom: 0.4rem; }
+.learndash-wrapper .ld-progress-bar-percentage { background: var(--clr-dark); height: 100%; border-radius: var(--radius-pill); transition: width 0.4s ease; }
+.learndash-wrapper .ld-progress-stats { font-size: 0.8rem; color: var(--clr-text-muted); }
+
+/* Content tabs */
+.learndash-wrapper .ld-tabs { margin-bottom: 2rem; }
+.learndash-wrapper .ld-tabs-navigation { border-bottom: 2px solid var(--clr-border); display: flex; gap: 0; margin-bottom: 1.5rem; }
+.learndash-wrapper .ld-tabs-navigation li { list-style: none; }
+.learndash-wrapper .ld-tabs-navigation li a { display: block; padding: 0.6rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: var(--clr-text-muted); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: var(--transition); }
+.learndash-wrapper .ld-tabs-navigation li.ld-is-active a,
+.learndash-wrapper .ld-tabs-navigation li a:hover { color: var(--clr-dark); border-bottom-color: var(--clr-dark); }
+.learndash-wrapper .ld-tab-content { font-size: 1rem; line-height: 1.7; color: var(--clr-text-main); }
+.learndash-wrapper .ld-tab-content p { margin-bottom: 1em; }
+
+/* Curriculum accordion */
+.learndash-wrapper .ld-item-list { background: var(--clr-surface); border: 1.5px solid var(--clr-border); border-radius: var(--radius-card); overflow: hidden; margin-bottom: 2rem; }
+
+.learndash-wrapper .ld-section-heading { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--clr-border); }
+.learndash-wrapper .ld-section-heading h2 { font-size: 1.05rem; font-weight: 700; color: var(--clr-text-main); margin: 0; }
+
+.learndash-wrapper .ld-expand-button { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; color: var(--clr-dark); background: var(--clr-lavender); border: none; border-radius: var(--radius-pill); padding: 0.35rem 0.9rem; cursor: pointer; transition: var(--transition); }
+.learndash-wrapper .ld-expand-button:hover { background: var(--clr-dark); color: #fff; }
+.learndash-wrapper .ld-expand-button .ld-icon { font-size: 0.75rem; }
+
+/* Lesson rows */
+.learndash-wrapper .ld-item-list-item { border-bottom: 1px solid var(--clr-border); }
+.learndash-wrapper .ld-item-list-item:last-child { border-bottom: none; }
+
+.learndash-wrapper .ld-item-list-item-preview { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1.75rem; text-decoration: none; color: var(--clr-text-main); font-weight: 500; font-size: 0.925rem; transition: var(--transition); }
+.learndash-wrapper .ld-item-list-item-preview:hover { background: var(--clr-bg); color: var(--clr-dark); }
+
+.learndash-wrapper .ld-item-list-item-preview .ld-icon { color: var(--clr-text-muted); flex-shrink: 0; }
+.learndash-wrapper .ld-item-list-item-preview .ld-status-icon { margin-left: auto; }
+
+/* Lock icon for non-enrolled */
+.learndash-wrapper .ld-item-list-item-preview .ld-icon-lock { color: var(--clr-border); }
+
+/* Topics nested inside a lesson */
+.learndash-wrapper .ld-table-list { border-top: 1px solid var(--clr-border); }
+.learndash-wrapper .ld-table-list-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1.75rem 0.6rem 3rem; font-size: 0.875rem; color: var(--clr-text-muted); border-bottom: 1px solid var(--clr-border); text-decoration: none; transition: var(--transition); }
+.learndash-wrapper .ld-table-list-item:last-child { border-bottom: none; }
+.learndash-wrapper .ld-table-list-item:hover { background: var(--clr-bg); color: var(--clr-dark); }
+
+/* Alert (certificate banner) */
+.learndash-wrapper .ld-alert { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; }
+.learndash-wrapper .ld-alert-success { background: #d1fae5; color: #065f46; }
+.learndash-wrapper .ld-alert .ld-button { background: #065f46; color: #fff; padding: 0.5rem 1.25rem; border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 700; text-decoration: none; }
+
+/* ---- 23a. Course page responsive ---- */
+@media (max-width: 640px) {
+	.ls-course-hero-img-wrap { aspect-ratio: 4 / 3; border-radius: var(--radius-sm); }
+	.ls-course-title { font-size: 1.4rem; }
+	.learndash-wrapper .ld-course-status { padding: 1.25rem; flex-direction: column; align-items: flex-start; }
+	.learndash-wrapper .ld-item-list-item-preview { padding: 0.75rem 1.25rem; }
+	.learndash-wrapper .ld-table-list-item { padding-left: 2rem; }
+	.learndash-wrapper .ld-section-heading { padding: 1rem 1.25rem; }
+}
