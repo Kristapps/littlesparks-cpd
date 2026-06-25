@@ -126,4 +126,5 @@ function ls_register_acf_field_groups() {
 		'label_placement'       => 'top',
 		'instruction_placement' => 'label',
 	) );
+
 }
