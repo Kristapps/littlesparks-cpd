@@ -110,6 +110,15 @@ function ls_register_acf_field_groups() {
 				'library'       => 'all',
 				'instructions'  => 'Small decorative icon shown on the course card (28×28px, SVG or PNG).',
 			),
+			array(
+				'key'          => 'field_course_outcomes',
+				'label'        => 'Learning Outcomes',
+				'name'         => 'course_outcomes',
+				'type'         => 'textarea',
+				'required'     => 0,
+				'rows'         => 6,
+				'instructions' => 'One outcome per line. Displayed as bullet points on the course landing page.',
+			),
 		),
 		'location' => array(
 			array(

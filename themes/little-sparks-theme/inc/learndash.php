@@ -144,9 +144,11 @@ function ls_course_page_init() {
 	}
 
 	// --- Not enrolled: store data for hero hook ---
+	$rating = ( $product_id && function_exists( 'get_field' ) ) ? (float) get_field( 'course_rating', $product_id ) : 0.0;
+
 	$GLOBALS['ls_course_hero_data'] = compact(
-		'product_id', 'short_desc', 'level', 'duration',
-		'cat_name', 'thumb_id'
+		'course_id', 'product_id', 'short_desc', 'level', 'duration',
+		'cat_name', 'thumb_id', 'rating'
 	);
 }
 
@@ -157,56 +159,257 @@ function ls_course_page_init() {
 add_filter( 'the_content', 'ls_course_page_hero_content', 20 );
 function ls_course_page_hero_content( $content ) {
 	if ( ! is_singular( 'sfwd-courses' ) ) return $content;
-	if ( ! empty( $GLOBALS['ls_cd_data'] ) ) return $content; // Enrolled — dashboard handles it.
+	if ( ! empty( $GLOBALS['ls_cd_data'] ) ) return $content;
 	if ( empty( $GLOBALS['ls_course_hero_data'] ) ) return $content;
 
-	$d        = $GLOBALS['ls_course_hero_data'];
-	$course_id = get_queried_object_id();
-	$img_html  = '';
-	if ( $d['thumb_id'] ) {
-		$img_html = '<div class="ls-course-hero-img-wrap">' . wp_get_attachment_image(
-			$d['thumb_id'],
-			'large',
-			false,
-			array(
-				'class'         => 'ls-course-hero-img',
-				'loading'       => 'eager',
-				'fetchpriority' => 'high',
-				'alt'           => esc_attr( get_the_title( $course_id ) ),
-			)
-		) . '</div>';
+	$d         = $GLOBALS['ls_course_hero_data'];
+	$course_id = $d['course_id'];
+
+	// WooCommerce product data.
+	$product    = ( $d['product_id'] && function_exists( 'wc_get_product' ) ) ? wc_get_product( $d['product_id'] ) : null;
+	$is_sale    = $product && $product->is_on_sale();
+	$price_html = $product ? wc_price( $product->get_price() ) : '';
+	$reg_html   = ( $product && $is_sale ) ? wc_price( $product->get_regular_price() ) : '';
+	$sale_pct   = 0;
+	if ( $is_sale && (float) $product->get_regular_price() > 0 ) {
+		$sale_pct = round( ( 1 - (float) $product->get_price() / (float) $product->get_regular_price() ) * 100 );
+	}
+	$cart_url = $product ? $product->add_to_cart_url() : home_url( '/#contact' );
+
+	// Course body copy.
+	$post_content = wpautop( wp_kses_post( get_post_field( 'post_content', $course_id ) ) );
+
+	// Learning outcomes: one per line.
+	$outcomes_raw = ( $d['product_id'] && function_exists( 'get_field' ) ) ? get_field( 'course_outcomes', $d['product_id'] ) : '';
+	$outcomes     = $outcomes_raw
+		? array_values( array_filter( array_map( 'trim', explode( "\n", $outcomes_raw ) ) ) )
+		: array();
+
+	$rating = isset( $d['rating'] ) ? (float) $d['rating'] : 0.0;
+
+	// Syllabus: SCORM outline titles, else LD lesson titles.
+	$lesson_ids = get_posts( array(
+		'post_type'      => 'sfwd-lessons',
+		'posts_per_page' => -1,
+		'post_status'    => 'publish',
+		'orderby'        => 'menu_order',
+		'order'          => 'ASC',
+		'fields'         => 'ids',
+		'meta_query'     => array(
+			array( 'key' => 'course_id', 'value' => $course_id ),
+		),
+	) );
+
+	$syllabus = array();
+	foreach ( $lesson_ids as $lid ) {
+		$xapi_id = (int) get_post_meta( $lid, 'show_xapi_content', true );
+		if ( $xapi_id ) {
+			$outline = ls_get_scorm_outline( $xapi_id );
+			if ( ! empty( $outline ) ) {
+				foreach ( $outline as $entry ) {
+					$title = is_array( $entry ) ? ( $entry['title'] ?? '' ) : (string) $entry;
+					if ( $title ) $syllabus[] = $title;
+				}
+				continue;
+			}
+		}
+		$t = get_the_title( $lid );
+		if ( $t ) $syllabus[] = $t;
 	}
 
-	$has_meta = $d['cat_name'] || $d['level'] || $d['duration'];
+	$show_about    = trim( strip_tags( $post_content ) ) !== '' || ! empty( $outcomes );
+	$show_syllabus = ! empty( $syllabus );
+	$show_buy      = $product && $price_html;
+
 	ob_start();
 	?>
-	<div class="ls-course-hero">
-		<?php echo $img_html; // Already escaped via wp_get_attachment_image. ?>
-		<div class="ls-course-hero-body">
-			<h1 class="ls-course-title"><?php echo esc_html( get_the_title( $course_id ) ); ?></h1>
-			<?php if ( $d['short_desc'] ) : ?>
-				<p class="ls-course-excerpt"><?php echo esc_html( $d['short_desc'] ); ?></p>
+	<div class="ls-cp-wrap">
+
+		<nav class="ls-cp-breadcrumb" aria-label="Breadcrumb">
+			<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Home</a>
+			<span aria-hidden="true">/</span>
+			<a href="<?php echo esc_url( home_url( '/courses/' ) ); ?>">Courses</a>
+			<span aria-hidden="true">/</span>
+			<span aria-current="page"><?php echo esc_html( get_the_title( $course_id ) ); ?></span>
+		</nav>
+
+		<header class="ls-cp-header">
+			<?php if ( $d['level'] || $d['cat_name'] ) : ?>
+			<div class="ls-cp-header-badges">
+				<?php if ( $d['cat_name'] ) : ?>
+					<span class="ls-cp-badge ls-cp-badge--cat"><?php echo esc_html( $d['cat_name'] ); ?></span>
+				<?php endif; ?>
+				<?php if ( $d['level'] ) : ?>
+					<span class="ls-cp-badge ls-cp-badge--level"><?php echo esc_html( $d['level'] ); ?></span>
+				<?php endif; ?>
+			</div>
 			<?php endif; ?>
-			<?php if ( $has_meta ) : ?>
-				<div class="ls-course-meta-bar">
-					<?php if ( $d['cat_name'] ) : ?>
-						<span class="ls-meta-pill ls-meta-cat"><?php echo esc_html( $d['cat_name'] ); ?></span>
-					<?php endif; ?>
-					<?php if ( $d['level'] ) : ?>
-						<span class="ls-meta-pill ls-meta-level"><?php echo esc_html( $d['level'] ); ?></span>
-					<?php endif; ?>
-					<?php if ( $d['duration'] ) : ?>
-						<span class="ls-meta-pill ls-meta-duration">
-							<svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-							<?php echo esc_html( $d['duration'] ); ?>
+
+			<h1 class="ls-cp-title"><?php echo esc_html( get_the_title( $course_id ) ); ?></h1>
+
+			<?php if ( $d['short_desc'] ) : ?>
+				<p class="ls-cp-tagline"><?php echo esc_html( $d['short_desc'] ); ?></p>
+			<?php endif; ?>
+
+			<?php if ( $rating > 0 || $d['duration'] ) : ?>
+			<div class="ls-cp-meta-bar">
+				<?php if ( $rating > 0 ) : ?>
+				<div class="ls-cp-rating" aria-label="Rating: <?php echo esc_attr( number_format( $rating, 1 ) ); ?> out of 5">
+					<span class="ls-cp-stars" aria-hidden="true">
+						<?php for ( $i = 1; $i <= 5; $i++ ) :
+							$filled = $i <= round( $rating ); ?>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="<?php echo $filled ? '#f5ac39' : 'none'; ?>" stroke="#f5ac39" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+						<?php endfor; ?>
+					</span>
+					<span class="ls-cp-rating-score"><?php echo esc_html( number_format( $rating, 1 ) ); ?></span>
+				</div>
+				<?php endif; ?>
+				<?php if ( $d['duration'] ) : ?>
+				<div class="ls-cp-duration">
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+					<?php echo esc_html( $d['duration'] ); ?>
+				</div>
+				<?php endif; ?>
+			</div>
+			<?php endif; ?>
+		</header>
+
+		<div class="ls-cp-body">
+
+			<div class="ls-cp-main">
+
+				<?php if ( $d['thumb_id'] ) : ?>
+				<div class="ls-cp-img-wrap">
+					<?php echo wp_get_attachment_image(
+						$d['thumb_id'], 'large', false,
+						array(
+							'class'         => 'ls-cp-img',
+							'loading'       => 'eager',
+							'fetchpriority' => 'high',
+							'alt'           => esc_attr( get_the_title( $course_id ) ),
+						)
+					); ?>
+					<div class="ls-cp-img-badge" aria-hidden="true">
+						<svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+						Online Course
+					</div>
+				</div>
+				<?php endif; ?>
+
+				<?php if ( $show_about ) : ?>
+				<div class="ls-cp-card">
+					<h2 class="ls-cp-card-title">
+						<span class="ls-cp-card-icon" aria-hidden="true">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
 						</span>
+						About this course
+					</h2>
+					<?php if ( trim( strip_tags( $post_content ) ) !== '' ) : ?>
+						<div class="ls-cp-about-text"><?php echo $post_content; // Sanitised via wp_kses_post. ?></div>
+					<?php endif; ?>
+					<?php if ( ! empty( $outcomes ) ) : ?>
+					<div class="ls-cp-outcomes">
+						<h3 class="ls-cp-outcomes-heading">What you'll learn</h3>
+						<ul class="ls-cp-outcomes-list">
+							<?php foreach ( $outcomes as $item ) : ?>
+								<li><?php echo esc_html( $item ); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
 					<?php endif; ?>
 				</div>
-			<?php endif; ?>
-		</div>
-	</div>
+				<?php endif; ?>
+
+				<?php if ( $show_syllabus ) : ?>
+				<div class="ls-cp-card">
+					<h2 class="ls-cp-card-title">
+						<span class="ls-cp-card-icon" aria-hidden="true">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+						</span>
+						Course Content
+					</h2>
+					<ul class="ls-cp-syllabus">
+						<?php foreach ( $syllabus as $i => $item ) : ?>
+						<li class="ls-cp-syllabus-item">
+							<span class="ls-cp-syl-num" aria-hidden="true"><?php echo absint( $i + 1 ); ?></span>
+							<span class="ls-cp-syl-title"><?php echo esc_html( $item ); ?></span>
+							<span class="ls-cp-syl-lock" aria-label="Enrol to access">
+								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+							</span>
+						</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+				<?php endif; ?>
+
+			</div><!-- .ls-cp-main -->
+
+			<aside class="ls-cp-sidebar" aria-label="Enrolment">
+
+				<div class="ls-cp-price-card">
+					<?php if ( $show_buy ) : ?>
+					<div class="ls-cp-price-row">
+						<span class="ls-cp-price"><?php echo $price_html; // Already escaped by wc_price(). ?></span>
+						<?php if ( $reg_html ) : ?>
+						<span class="ls-cp-reg-price"><?php echo $reg_html; ?></span>
+						<?php endif; ?>
+					</div>
+					<?php if ( $sale_pct > 0 ) : ?>
+					<p class="ls-cp-sale-badge">
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+						<?php echo esc_html( $sale_pct ); ?>% Off — Launch Offer
+					</p>
+					<?php endif; ?>
+					<a href="<?php echo esc_url( $cart_url ); ?>" class="ls-cp-enrol-btn">
+						Enrol Now
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+					</a>
+					<p class="ls-cp-secure">
+						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+						Secure payment &bull; Instant access
+					</p>
+					<hr class="ls-cp-divider">
+					<?php endif; ?>
+
+					<h4 class="ls-cp-includes-heading">This course includes:</h4>
+					<ul class="ls-cp-includes">
+						<?php if ( $d['duration'] ) : ?>
+						<li>
+							<span class="ls-cp-inc-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+							<?php echo esc_html( $d['duration'] ); ?> of learning content
+						</li>
+						<?php endif; ?>
+						<li>
+							<span class="ls-cp-inc-icon ls-cp-inc-icon--cert" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+							CPD Certified certificate on completion
+						</li>
+						<li>
+							<span class="ls-cp-inc-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+							Mapped to statutory frameworks
+						</li>
+						<li>
+							<span class="ls-cp-inc-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
+							Access on any device
+						</li>
+					</ul>
+				</div>
+
+				<div class="ls-cp-compliance">
+					<span class="ls-cp-compliance-icon" aria-hidden="true">
+						<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+					</span>
+					<div>
+						<strong>100% Compliant Training</strong>
+						<p>Mapped to the latest EYFS and Keeping Children Safe guidance.</p>
+					</div>
+				</div>
+
+			</aside>
+
+		</div><!-- .ls-cp-body -->
+	</div><!-- .ls-cp-wrap -->
 	<?php
-	return ob_get_clean() . $content;
+	return ob_get_clean(); // Suppress LD's default output entirely.
 }
 
 function ls_add_course_dashboard_body_class( $classes ) {
