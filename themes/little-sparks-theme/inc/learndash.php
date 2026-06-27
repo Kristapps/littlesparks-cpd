@@ -48,12 +48,25 @@ function ls_ajax_save_scorm_outline() {
 add_action( 'wp_ajax_ls_save_scorm_progress', 'ls_ajax_save_scorm_progress' );
 function ls_ajax_save_scorm_progress() {
 	check_ajax_referer( 'ls_scorm_outline', 'nonce' );
-	if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( 'forbidden' );
 
 	$xapi_id = absint( $_POST['xapi_id'] ?? 0 );
 	$percent = isset( $_POST['percent'] ) ? min( 100, max( 0, (int) $_POST['percent'] ) ) : null;
 
 	if ( ! $xapi_id || null === $percent ) wp_send_json_error( 'missing data' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		$lessons = get_posts( array(
+			'post_type'   => array( 'sfwd-lessons', 'sfwd-topic' ),
+			'numberposts' => 1,
+			'fields'      => 'ids',
+			'meta_query'  => array( array( 'key' => 'show_xapi_content', 'value' => $xapi_id ) ),
+		) );
+		if ( empty( $lessons ) ) wp_send_json_error( 'not found' );
+		$cid = function_exists( 'learndash_get_course_id' ) ? (int) learndash_get_course_id( $lessons[0] ) : 0;
+		if ( ! $cid || ! function_exists( 'sfwd_lms_has_access' ) || ! sfwd_lms_has_access( $cid, get_current_user_id() ) ) {
+			wp_send_json_error( 'forbidden' );
+		}
+	}
 
 	update_user_meta( get_current_user_id(), '_ls_scorm_progress_' . $xapi_id, $percent );
 	wp_send_json_success();
@@ -235,8 +248,24 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 	}
 	$percent = ( $total_count > 0 ) ? round( ( $completed_count / $total_count ) * 100 ) : 0;
 
-	// If LD hasn't marked complete yet, check for SCORM internal progress saved by the scraper.
-	// This gives a real mid-course % (e.g. 9%) rather than always showing 0% until done.
+	// --- Lessons (queried early so SCORM fallback can use $lesson_ids) ---
+	$lesson_ids = get_posts( array(
+		'post_type'      => 'sfwd-lessons',
+		'posts_per_page' => -1,
+		'post_status'    => 'publish',
+		'orderby'        => 'menu_order',
+		'order'          => 'ASC',
+		'meta_key'       => 'course_id',
+		'meta_value'     => $course_id,
+		'fields'         => 'ids',
+	) );
+
+	$next_lesson_id  = 0;
+	$next_lesson_url = '';
+	$lesson_data     = array();
+	$scrape_tasks    = array();
+
+	// Overlay SCORM internal progress if higher than LD's completion-based %.
 	if ( $percent < 100 ) {
 		foreach ( $lesson_ids as $_lid ) {
 			$_xapi = (int) get_post_meta( $_lid, 'show_xapi_content', true );
@@ -257,23 +286,6 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 			: 'Course complete';
 	}
 
-	// --- Lessons ---
-	$lesson_ids = get_posts( array(
-		'post_type'      => 'sfwd-lessons',
-		'posts_per_page' => -1,
-		'post_status'    => 'publish',
-		'orderby'        => 'menu_order',
-		'order'          => 'ASC',
-		'meta_key'       => 'course_id',
-		'meta_value'     => $course_id,
-		'fields'         => 'ids',
-	) );
-
-	$next_lesson_id  = 0;
-	$next_lesson_url = '';
-	$lesson_data     = array();
-	$scrape_tasks    = array();
-
 	foreach ( $lesson_ids as $lid ) {
 		$complete = function_exists( 'learndash_is_lesson_complete' )
 			? learndash_is_lesson_complete( $user_id, $lid, $course_id )
@@ -292,18 +304,16 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 
 			$outline = ls_get_scorm_outline( $xapi_id );
 
-			// Queue scrape task for admins: outline (once) and/or progress (while incomplete).
-			if ( current_user_can( 'manage_options' ) ) {
-				$needs_outline  = empty( $outline );
-				$needs_progress = ( $percent < 100 );
-				if ( $needs_outline || $needs_progress ) {
-					$scrape_tasks[] = array(
-						'xapi_id'         => $xapi_id,
-						'launch_url'      => $launch_url,
-						'scrape_outline'  => $needs_outline,
-						'scrape_progress' => $needs_progress,
-					);
-				}
+			// Outline: admin-only, one-time cache. Progress: all enrolled users.
+			$needs_outline  = empty( $outline ) && current_user_can( 'manage_options' );
+			$needs_progress = ( $percent < 100 );
+			if ( $needs_outline || $needs_progress ) {
+				$scrape_tasks[] = array(
+					'xapi_id'         => $xapi_id,
+					'launch_url'      => $launch_url,
+					'scrape_outline'  => $needs_outline,
+					'scrape_progress' => $needs_progress,
+				);
 			}
 		}
 
