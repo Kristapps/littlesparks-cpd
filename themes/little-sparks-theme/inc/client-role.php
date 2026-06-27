@@ -79,6 +79,16 @@ function ls_restrict_client_admin_menu() {
 	}
 }
 
+// Allow client role through WooCommerce's wp-admin redirect block.
+add_filter( 'woocommerce_prevent_admin_access', 'ls_allow_client_admin_access' );
+function ls_allow_client_admin_access( $prevent ) {
+	$user = wp_get_current_user();
+	if ( in_array( 'little_sparks_admin', (array) $user->roles, true ) ) {
+		return false;
+	}
+	return $prevent;
+}
+
 // Remove Query Monitor from admin bar for client role.
 add_action( 'admin_bar_menu', 'ls_remove_qm_for_client', 999 );
 function ls_remove_qm_for_client( $wp_admin_bar ) {
