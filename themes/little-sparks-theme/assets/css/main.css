@@ -26,6 +26,9 @@
    20.  Status / confirmation pages
    21.  CookieYes banner
    22.  Avatars & decorative utilities
+   23.  LD Course — non-enrolled landing hero
+   24.  LD Course — enrolled dashboard
+   25.  LD Lesson page (Focus Mode overrides)
    ===================================================== */
 
 /* ---- 1. Design tokens ---- */
@@ -1244,3 +1247,333 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 	.ls-my-courses-grid { grid-template-columns: 1fr; }
 	.ls-account-stats { gap: 0.75rem; }
 }
+
+/* ---- 23. LD Course — non-enrolled landing hero ---- */
+.ls-course-hero {
+	display: grid;
+	grid-template-columns: 1fr 420px;
+	gap: 3rem;
+	align-items: center;
+	max-width: 1200px;
+	margin: 0 auto 3rem;
+	padding: 3rem 2rem 2rem;
+}
+.ls-course-hero-img-wrap {
+	border-radius: var(--radius-card);
+	overflow: hidden;
+	box-shadow: var(--shadow-float);
+	aspect-ratio: 16 / 9;
+}
+.ls-course-hero-img {
+	width: 100%;
+	height: 100% !important;
+	object-fit: cover;
+	display: block;
+}
+.ls-course-hero-body { display: flex; flex-direction: column; gap: 1rem; }
+.ls-course-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; line-height: 1.15; color: var(--clr-text-main); }
+.ls-course-excerpt { font-size: 1.05rem; color: var(--clr-text-muted); line-height: 1.6; }
+.ls-course-meta-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
+.ls-meta-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 12px;
+	border-radius: var(--radius-pill);
+	font-size: 0.8rem;
+	font-weight: 600;
+	background: var(--clr-lavender);
+	color: var(--clr-dark);
+}
+.ls-meta-pill.ls-meta-cat { background: var(--clr-accent-light); color: #7a4d00; }
+.ls-meta-pill.ls-meta-duration { background: var(--clr-lavender); color: var(--clr-dark); }
+@media (max-width: 900px) {
+	.ls-course-hero { grid-template-columns: 1fr; }
+	.ls-course-hero-img-wrap { max-height: 260px; }
+}
+
+/* ---- 24. LD Course — enrolled dashboard ---- */
+
+/* Suppress LD's default course chrome when dashboard is active */
+body.ls-course-dashboard .learndash-wrapper,
+body.ls-course-dashboard .ld-course-status,
+body.ls-course-dashboard .ld-lesson-items,
+body.ls-course-dashboard .ld-table-list-wrapper,
+body.ls-course-dashboard .ld-item-list,
+body.ls-course-dashboard .ld-tab-underline-menu,
+body.ls-course-dashboard .ld-tabs,
+body.ls-course-dashboard .learndash_mark_complete_button { display: none !important; }
+
+/* Dashboard grid */
+.ls-course-dashboard-wrap {
+	display: grid;
+	grid-template-columns: 340px 1fr;
+	gap: 2rem;
+	align-items: start;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 2.5rem 2rem 4rem;
+}
+
+/* Sticky sidebar */
+.ls-cd-sidebar { position: sticky; top: 90px; }
+
+/* Base card */
+.ls-cd-card {
+	background: var(--clr-surface);
+	border-radius: var(--radius-card);
+	padding: 1.75rem;
+	box-shadow: var(--shadow-sm);
+	margin-bottom: 1.25rem;
+}
+.ls-cd-card:last-child { margin-bottom: 0; }
+
+/* Sidebar card: flat bottom, small radius, clip curriculum to edges */
+.ls-cd-sidebar .ls-cd-card {
+	border-radius: var(--radius-sm);
+	padding-bottom: 0;
+	overflow: hidden;
+}
+
+/* Thumbnail in sidebar */
+.ls-cd-thumb-wrap {
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	margin-bottom: 1.25rem;
+	aspect-ratio: 16 / 9;
+}
+.ls-cd-thumb {
+	width: 100%;
+	height: 100% !important;
+	object-fit: cover;
+	display: block;
+}
+
+/* Course title in sidebar */
+.ls-cd-course-title {
+	font-size: 1.25rem;
+	font-weight: 800;
+	line-height: 1.2;
+	color: var(--clr-text-main);
+	margin-bottom: 0.875rem;
+}
+
+/* Meta badges */
+.ls-cd-meta-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin-bottom: 1.5rem;
+}
+.ls-cd-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 10px;
+	border-radius: var(--radius-pill);
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	background: var(--clr-lavender);
+	color: var(--clr-dark);
+}
+.ls-cd-badge--accent { background: var(--clr-accent-light); color: #7a4d00; }
+
+/* Curriculum */
+.ls-cd-curriculum-label {
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--clr-text-muted);
+	margin-bottom: 0.5rem;
+}
+.ls-cd-curriculum {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin: 0 -1.75rem;
+	background: transparent;
+	border-radius: 0;
+}
+.ls-cd-lesson {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 1.75rem;
+	border-radius: 0;
+	text-decoration: none;
+	color: var(--clr-text-main);
+	font-size: 0.9rem;
+	transition: background 0.18s ease;
+}
+.ls-cd-lesson:last-child { padding-bottom: 1.75rem; }
+.ls-cd-lesson:hover { background: var(--clr-bg); }
+.ls-cd-lesson--next {
+	color: var(--clr-dark);
+	font-weight: 600;
+}
+.ls-cd-lesson--next:hover { background: var(--clr-bg); }
+.ls-cd-lesson-icon {
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #fff;
+	border: 2px solid var(--clr-border);
+	color: var(--clr-text-muted);
+}
+.ls-cd-lesson-icon svg { width: 12px; height: 12px; }
+.ls-cd-lesson--done .ls-cd-lesson-icon {
+	background: var(--clr-dark);
+	border-color: var(--clr-dark);
+	color: #fff;
+}
+.ls-cd-lesson--next .ls-cd-lesson-icon {
+	border-color: var(--clr-dark);
+	background: var(--clr-lavender);
+	color: var(--clr-dark);
+}
+.ls-cd-lesson-title { flex-grow: 1; line-height: 1.35; }
+
+/* Scraped SCORM outline items */
+.ls-cd-outline-num {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: var(--clr-text-muted);
+	line-height: 1;
+}
+.ls-cd-outline-item .ls-cd-lesson-title { font-size: 0.865rem; }
+
+/* Available: muted, accessible */
+.ls-cd-outline-item--available .ls-cd-lesson-title { color: var(--clr-text-muted); }
+
+/* Current: brand purple, subtle highlight */
+.ls-cd-outline-item--current {
+	background: rgba(148, 57, 212, 0.07);
+}
+.ls-cd-outline-item--current .ls-cd-outline-num { color: var(--clr-dark); }
+.ls-cd-outline-item--current .ls-cd-lesson-title {
+	color: var(--clr-dark);
+	font-weight: 600;
+}
+
+/* Locked: greyed, no interaction */
+.ls-cd-outline-item--locked {
+	opacity: 0.4;
+	pointer-events: none;
+	cursor: default;
+}
+.ls-cd-outline-item--locked .ls-cd-lesson-title { color: var(--clr-text-muted); }
+.ls-cd-outline-item--locked .ls-cd-lesson-icon { border-color: var(--clr-border); color: var(--clr-text-muted); }
+
+/* Done: purple icon already handled by ls-cd-lesson--done */
+
+/* Section heading */
+.ls-cd-section-title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--clr-text-main);
+	margin-bottom: 0.25rem;
+}
+
+/* Progress card */
+.ls-cd-progress-card { display: flex; flex-direction: column; gap: 1rem; }
+.ls-cd-progress-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.ls-cd-progress-sub { font-size: 0.875rem; color: var(--clr-text-muted); margin: 0; }
+.ls-cd-progress-stats { text-align: right; flex-shrink: 0; }
+.ls-cd-percent { font-size: 2rem; font-weight: 800; line-height: 1; color: var(--clr-dark); }
+.ls-cd-time-left { font-size: 0.8rem; color: var(--clr-text-muted); margin-top: 3px; }
+.ls-cd-track {
+	width: 100%;
+	height: 10px;
+	background: var(--clr-border);
+	border-radius: var(--radius-pill);
+	overflow: hidden;
+}
+.ls-cd-fill {
+	height: 100%;
+	background: linear-gradient(90deg, var(--clr-accent) 0%, #ffca6a 100%);
+	border-radius: var(--radius-pill);
+	transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+	min-width: 4px;
+}
+
+/* Continue card */
+.ls-cd-continue-card {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1.5rem;
+	background: linear-gradient(135deg, #fff 0%, var(--clr-lavender) 100%);
+	border: 1px solid var(--clr-border);
+}
+.ls-cd-continue-card--done {
+	background: linear-gradient(135deg, #fff 0%, var(--clr-accent-light) 100%);
+	border-color: var(--clr-accent-light);
+}
+.ls-cd-continue-eyebrow {
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--clr-dark);
+	margin-bottom: 4px;
+}
+.ls-cd-continue-title {
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: var(--clr-text-main);
+	margin-bottom: 4px;
+}
+.ls-cd-continue-sub { font-size: 0.875rem; color: var(--clr-text-muted); }
+
+/* CTA button */
+.ls-cd-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	flex-shrink: 0;
+	background: var(--clr-dark);
+	color: #fff;
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 0.925rem;
+	padding: 12px 22px;
+	border-radius: var(--radius-pill);
+	border: none;
+	cursor: pointer;
+	transition: background 0.18s ease, transform 0.1s ease;
+	white-space: nowrap;
+}
+.ls-cd-btn svg { width: 15px; height: 15px; }
+.ls-cd-btn:hover { background: #7a2db5; transform: translateY(-1px); }
+.ls-cd-continue-card--done .ls-cd-btn { background: var(--clr-accent); color: #2A0D40; }
+.ls-cd-continue-card--done .ls-cd-btn:hover { background: #e49c2a; }
+
+/* About card */
+.ls-cd-about-body { font-size: 0.975rem; line-height: 1.7; color: var(--clr-text-muted); }
+.ls-cd-about-body p { margin-bottom: 0.875rem; }
+.ls-cd-about-body p:last-child { margin-bottom: 0; }
+
+/* Dashboard responsive */
+@media (max-width: 960px) {
+	.ls-course-dashboard-wrap {
+		grid-template-columns: 1fr;
+		padding: 1.5rem 1rem 3rem;
+	}
+	.ls-cd-sidebar { position: static; }
+}
+@media (max-width: 540px) {
+	.ls-cd-continue-card { flex-direction: column; align-items: flex-start; }
+	.ls-cd-btn { width: 100%; justify-content: center; }
+	.ls-cd-progress-header { flex-direction: column; }
+	.ls-cd-progress-stats { text-align: left; }
+}
+
+/* ---- 25. LD Lesson page (Focus Mode overrides) ---- */
+.learndash-wrapper .ld-focus-mode .ld-focus-sidebar { background: var(--clr-surface); }
+.learndash-wrapper .ld-focus-mode .ld-focus-header { background: var(--clr-dark); }
