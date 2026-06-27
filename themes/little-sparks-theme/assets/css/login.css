@@ -1,0 +1,116 @@
+/* Little Sparks login page branding */
+
+body.login {
+	background: #FBF7FF;
+}
+
+body.login div#login {
+	padding: 26px 0 0;
+}
+
+/* Hide language switcher — not needed for a UK-only site */
+body.login .language-switcher {
+	display: none !important;
+}
+
+/* Logo — remove WP default, replaced via inline style from PHP */
+body.login .wp-login-logo a {
+	background-image: none;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 220px;
+	height: 70px;
+	display: block;
+}
+
+/* Form card */
+body.login form {
+	border: none;
+	border-radius: 12px;
+	box-shadow: 0 4px 24px rgba(148, 57, 212, 0.12);
+	padding: 28px 32px;
+	background: #fff;
+}
+
+body.login label {
+	color: #2A0D40;
+	font-weight: 600;
+}
+
+body.login input[type=text],
+body.login input[type=password] {
+	border: 1.5px solid #d4b8f0;
+	border-radius: 8px;
+	padding: 10px 14px;
+	height: auto;
+	font-size: 15px;
+	box-shadow: none;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	color: #2A0D40;
+}
+
+body.login input[type=text]:focus,
+body.login input[type=password]:focus {
+	border-color: #9439d4;
+	box-shadow: 0 0 0 2px rgba(148, 57, 212, 0.15);
+	outline: none;
+}
+
+/* Submit button */
+body.login .button-primary,
+body.login input[type=submit] {
+	background: #9439d4;
+	border: none;
+	border-radius: 8px;
+	color: #fff;
+	font-size: 15px;
+	font-weight: 600;
+	height: 44px;
+	padding: 0 24px;
+	text-shadow: none;
+	box-shadow: none;
+	transition: background 0.2s;
+	width: 100%;
+}
+
+body.login .button-primary:hover,
+body.login input[type=submit]:hover,
+body.login .button-primary:focus,
+body.login input[type=submit]:focus {
+	background: #f5ac39;
+	border: none;
+	box-shadow: none;
+	color: #2A0D40;
+}
+
+/* Links */
+body.login a {
+	color: #9439d4;
+}
+
+body.login a:hover {
+	color: #7d2fbe;
+}
+
+body.login #backtoblog a,
+body.login #nav a {
+	color: #9439d4;
+}
+
+body.login #backtoblog a:hover,
+body.login #nav a:hover {
+	color: #7d2fbe;
+}
+
+/* Error / info messages */
+body.login #login_error,
+body.login .message,
+body.login .success {
+	border-left-color: #9439d4;
+	border-radius: 8px;
+}
+
+body.login #login_error {
+	border-left-color: #d63638;
+}

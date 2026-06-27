@@ -1,0 +1,164 @@
+/* Little Sparks admin colour scheme */
+
+/* ── Sidebar ── */
+#adminmenuback,
+#adminmenuwrap,
+#adminmenu {
+	background: #2A0D40;
+}
+
+#adminmenu a {
+	color: #d4b8f0;
+}
+
+#adminmenu div.wp-menu-image:before {
+	color: #9e5ecf;
+}
+
+#adminmenu a:hover,
+#adminmenu li.menu-top:hover,
+#adminmenu li.opensub > a.menu-top,
+#adminmenu li > a.menu-top:focus {
+	background: #9439d4;
+	color: #fff;
+}
+
+#adminmenu li.menu-top:hover div.wp-menu-image:before,
+#adminmenu li.opensub > a.menu-top div.wp-menu-image:before {
+	color: #fff;
+}
+
+/* Active items */
+#adminmenu .current div.wp-menu-image:before,
+#adminmenu .wp-has-current-submenu div.wp-menu-image:before,
+#adminmenu .wp-menu-open div.wp-menu-image:before {
+	color: #fff;
+}
+
+#adminmenu li.current a.menu-top,
+#adminmenu li.wp-has-current-submenu a.wp-has-current-submenu,
+#adminmenu li.wp-has-current-submenu .wp-submenu .wp-submenu-head {
+	background: #9439d4;
+	color: #fff;
+}
+
+/* Submenu */
+#adminmenu .wp-submenu,
+#adminmenu .wp-has-current-submenu .wp-submenu,
+#adminmenu .wp-has-current-submenu.opensub .wp-submenu {
+	background: #1c0a2e;
+}
+
+#adminmenu .wp-submenu a {
+	color: #c9a8e8;
+}
+
+#adminmenu .wp-submenu a:hover,
+#adminmenu .wp-submenu a:focus {
+	color: #fff;
+}
+
+#adminmenu li.current .wp-submenu a.current {
+	color: #f5ac39;
+}
+
+/* Notification badges */
+#adminmenu .awaiting-mod,
+#adminmenu .update-plugins {
+	background: #f5ac39;
+	color: #2A0D40;
+}
+
+/* ── Admin bar ── */
+#wpadminbar {
+	background: #2A0D40;
+}
+
+#wpadminbar .ab-item,
+#wpadminbar a.ab-item,
+#wpadminbar > #wp-toolbar span.ab-label {
+	color: #d4b8f0;
+}
+
+#wpadminbar .ab-top-menu > li:hover > .ab-item,
+#wpadminbar .ab-top-menu > li.hover > .ab-item {
+	background: #9439d4;
+	color: #fff;
+}
+
+#wpadminbar .menupop .ab-sub-wrapper {
+	background: #2A0D40;
+}
+
+#wpadminbar .quicklinks .menupop ul li a,
+#wpadminbar .quicklinks .menupop.hover ul li a {
+	color: #d4b8f0;
+}
+
+#wpadminbar .quicklinks .menupop ul li a:hover,
+#wpadminbar .quicklinks .menupop ul li a:focus {
+	background: #9439d4;
+	color: #fff;
+}
+
+/* ── Buttons ── */
+.button-primary {
+	background: #9439d4;
+	border-color: #7d2fbe;
+	color: #fff;
+	box-shadow: none;
+	text-shadow: none;
+}
+
+.button-primary:hover,
+.button-primary:focus {
+	background: #7d2fbe;
+	border-color: #6b27a0;
+	color: #fff;
+}
+
+.button-primary:active {
+	background: #6b27a0;
+	border-color: #581f85;
+}
+
+/* ── Focus / form inputs ── */
+input[type=checkbox]:focus,
+input[type=color]:focus,
+input[type=date]:focus,
+input[type=email]:focus,
+input[type=number]:focus,
+input[type=password]:focus,
+input[type=search]:focus,
+input[type=tel]:focus,
+input[type=text]:focus,
+input[type=url]:focus,
+select:focus,
+textarea:focus {
+	border-color: #9439d4;
+	box-shadow: 0 0 0 1px #9439d4;
+}
+
+input[type=checkbox]:checked::before {
+	color: #9439d4;
+}
+
+input[type=radio]:checked::before {
+	background: #9439d4;
+}
+
+/* ── Links ── */
+a {
+	color: #9439d4;
+}
+
+a:hover,
+a:active {
+	color: #7d2fbe;
+}
+
+/* ── Folded sidebar active indicator ── */
+.folded #adminmenu li.current,
+.folded #adminmenu li.wp-has-current-submenu {
+	border-left: 4px solid #f5ac39;
+}
