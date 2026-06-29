@@ -594,19 +594,28 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 	$course_complete   = ( $percent >= 100 && count( $lesson_data ) > 0 );
 	$next_lesson_title = $next_lesson_id ? get_the_title( $next_lesson_id ) : '';
 
-	// Use Rise outline modules for lesson label when available.
-	$rise_total = 0;
-	$rise_done  = 0;
+	// Use Rise outline modules for lesson label and next module title when available.
+	$rise_total       = 0;
+	$rise_done        = 0;
+	$rise_next_title  = '';
 	foreach ( $lesson_data as $_ld ) {
 		if ( ! empty( $_ld['outline'] ) ) {
 			$_mods       = count( $_ld['outline'] );
 			$rise_total += $_mods;
-			$rise_done  += $_ld['user_percent'] > 0 ? (int) round( $_ld['user_percent'] / 100 * $_mods ) : 0;
+			$_done       = $_ld['user_percent'] > 0 ? (int) round( $_ld['user_percent'] / 100 * $_mods ) : 0;
+			$rise_done  += $_done;
+			if ( empty( $rise_next_title ) && $_done < $_mods ) {
+				$_next_entry    = $_ld['outline'][ $_done ] ?? null;
+				$rise_next_title = is_array( $_next_entry ) ? ( $_next_entry['title'] ?? '' ) : (string) $_next_entry;
+			}
 		}
 	}
 	if ( $rise_total > 0 ) {
 		$total_count      = $rise_total;
 		$lesson_num_label = min( $rise_done + 1, $rise_total );
+		if ( $rise_next_title ) {
+			$next_lesson_title = $rise_next_title;
+		}
 	} else {
 		$total_count      = $total_count > 0 ? $total_count : count( $lesson_ids );
 		$lesson_num_label = $completed_count + 1;

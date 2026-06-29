@@ -1752,7 +1752,9 @@ body.ls-course-dashboard .learndash_mark_complete_button { display: none !import
 	background: var(--clr-lavender);
 	color: var(--clr-dark);
 }
-.ls-cd-lesson-title { flex-grow: 1; line-height: 1.35; }
+.ls-cd-lesson-title { flex-grow: 1; line-height: 1.35; text-decoration: none; }
+.page-content .ls-cd-lesson,
+.comments-area .ls-cd-lesson { text-decoration: none; }
 
 /* Scraped SCORM outline items */
 .ls-cd-outline-num {
@@ -1866,6 +1868,8 @@ body.ls-course-dashboard .learndash_mark_complete_button { display: none !import
 }
 .ls-cd-btn svg { width: 15px; height: 15px; }
 .ls-cd-btn:hover { background: #7a2db5; transform: translateY(-1px); }
+.page-content .ls-cd-btn,
+.comments-area .ls-cd-btn { text-decoration: none; }
 .ls-cd-continue-card--done .ls-cd-btn { background: var(--clr-accent); color: #2A0D40; }
 .ls-cd-continue-card--done .ls-cd-btn:hover { background: #e49c2a; }
 

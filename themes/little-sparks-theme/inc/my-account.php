@@ -83,6 +83,40 @@ function ls_render_my_course_card( $course_id, $user_id ) {
 	$total           = isset( $course_progress['total'] ) ? (int) $course_progress['total'] : 0;
 	$percent         = ( $total > 0 ) ? (int) round( ( $completed / $total ) * 100 ) : 0;
 
+	// SCORM fallback: LD doesn't track GrassBlade progress, so read it directly.
+	$scorm_percent     = 0;
+	$scorm_total_mods  = 0;
+	$scorm_done_mods   = 0;
+	if ( function_exists( 'ls_get_grassblade_progress' ) ) {
+		$lesson_ids = get_posts( array(
+			'post_type'   => 'sfwd-lessons',
+			'numberposts' => -1,
+			'fields'      => 'ids',
+			'meta_query'  => array( array(
+				'key'   => 'lesson_course_id',
+				'value' => $course_id,
+			) ),
+		) );
+		foreach ( $lesson_ids as $lid ) {
+			$xapi_id = (int) get_post_meta( $lid, 'show_xapi_content', true );
+			if ( ! $xapi_id ) continue;
+			$pct = ls_get_grassblade_progress( $xapi_id, $user_id );
+			if ( $pct > $scorm_percent ) {
+				$scorm_percent = $pct;
+				$outline       = json_decode( get_post_meta( $xapi_id, '_ls_scorm_outline', true ), true );
+				$scorm_total_mods = is_array( $outline ) ? count( $outline ) : 0;
+				$scorm_done_mods  = $scorm_total_mods > 0 ? (int) round( $pct / 100 * $scorm_total_mods ) : 0;
+			}
+		}
+	}
+
+	// Use SCORM data when LD has no progress recorded.
+	if ( 0 === $percent && $scorm_percent > 0 ) {
+		$percent   = $scorm_percent;
+		$completed = $scorm_done_mods;
+		$total     = $scorm_total_mods;
+	}
+
 	$thumb_id   = get_post_thumbnail_id( $course_id );
 	$course_url = get_permalink( $course_id );
 	$title      = get_the_title( $course_id );
@@ -122,11 +156,11 @@ function ls_render_my_course_card( $course_id, $user_id ) {
 			<h3 class="ls-course-card-title">
 				<a href="<?php echo esc_url( $course_url ); ?>"><?php echo esc_html( $title ); ?></a>
 			</h3>
-			<?php if ( $total > 0 ) : ?>
-			<div class="ls-course-card-progress" role="progressbar" aria-valuenow="<?php echo $percent; ?>" aria-valuemin="0" aria-valuemax="100" aria-label="<?php echo esc_attr( $percent . '% of course completed' ); ?>">
-				<div class="ls-course-card-progress-fill" style="width:<?php echo $percent; ?>%"></div>
+			<div class="ls-course-card-progress" role="progressbar" aria-valuenow="<?php echo esc_attr( $percent ); ?>" aria-valuemin="0" aria-valuemax="100" aria-label="<?php echo esc_attr( $percent . '% of course completed' ); ?>">
+				<div class="ls-course-card-progress-fill" style="width:<?php echo esc_attr( $percent ); ?>%"></div>
 			</div>
-			<p class="ls-course-card-steps"><?php echo esc_html( $completed . ' of ' . $total . ' steps completed' ); ?></p>
+			<?php if ( $total > 0 ) : ?>
+			<p class="ls-course-card-steps"><?php echo esc_html( $completed . ' of ' . $total . ' modules completed' ); ?></p>
 			<?php endif; ?>
 			<div class="ls-course-card-actions">
 				<?php if ( $cert_url ) : ?>
