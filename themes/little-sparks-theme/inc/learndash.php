@@ -29,9 +29,7 @@ function ls_ajax_save_scorm_outline() {
 	foreach ( $items as $item ) {
 		if ( empty( $item['title'] ) ) continue;
 		$clean[] = array(
-			'title'   => sanitize_text_field( $item['title'] ),
-			'locked'  => ! empty( $item['locked'] ),
-			'current' => ! empty( $item['current'] ),
+			'title' => sanitize_text_field( $item['title'] ),
 		);
 	}
 
@@ -70,6 +68,56 @@ function ls_ajax_save_scorm_progress() {
 
 	update_user_meta( get_current_user_id(), '_ls_scorm_progress_' . $xapi_id, $percent );
 	wp_send_json_success();
+}
+
+// ---------------------------------------------------------------------------
+// Helper: LZW decompress Rise's suspend_data byte array to a string.
+// ---------------------------------------------------------------------------
+function ls_lzw_decompress( array $codes ): string {
+	$dict = array();
+	for ( $i = 0; $i < 256; $i++ ) {
+		$dict[ $i ] = chr( $i );
+	}
+	$out  = '';
+	$prev = null;
+	foreach ( $codes as $code ) {
+		if ( isset( $dict[ $code ] ) ) {
+			$entry = $dict[ $code ];
+		} elseif ( $code === count( $dict ) ) {
+			$entry = $prev . $prev[0];
+		} else {
+			return '';
+		}
+		$out .= $entry;
+		if ( $prev !== null ) {
+			$dict[] = $prev . $entry[0];
+		}
+		$prev = $entry;
+	}
+	return $out;
+}
+
+// ---------------------------------------------------------------------------
+// Helper: read progress % for a user from GrassBlade's scorm_data table.
+// Decodes Rise's LZW-compressed suspend_data — no iframe scraping needed.
+// Returns 0 if the user hasn't started the content yet.
+// ---------------------------------------------------------------------------
+function ls_get_grassblade_progress( int $content_id, int $user_id ): int {
+	if ( ! $content_id || ! $user_id ) return 0;
+	global $wpdb;
+	$row = $wpdb->get_var( $wpdb->prepare(
+		"SELECT var_value FROM {$wpdb->prefix}grassblade_scorm_data
+		 WHERE content_id = %d AND user_id = %d AND var_key = 'cmi.suspend_data'
+		 ORDER BY id DESC LIMIT 1",
+		$content_id,
+		$user_id
+	) );
+	if ( ! $row ) return 0;
+	$envelope = json_decode( $row, true );
+	if ( empty( $envelope['d'] ) || ! is_array( $envelope['d'] ) ) return 0;
+	$progress = json_decode( ls_lzw_decompress( $envelope['d'] ), true );
+	if ( ! isset( $progress['progress']['p'] ) ) return 0;
+	return min( 100, max( 0, (int) $progress['progress']['p'] ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -150,6 +198,11 @@ function ls_course_page_init() {
 		'course_id', 'product_id', 'short_desc', 'level', 'duration',
 		'cat_name', 'thumb_id', 'rating'
 	);
+
+	add_filter( 'body_class', function( $classes ) {
+		$classes[] = 'ls-course-preview';
+		return $classes;
+	} );
 }
 
 // ---------------------------------------------------------------------------
@@ -468,14 +521,14 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 	$lesson_data     = array();
 	$scrape_tasks    = array();
 
-	// Overlay SCORM internal progress if higher than LD's completion-based %.
+	// Overlay SCORM progress from GrassBlade DB — always accurate, no scraping needed.
 	if ( $percent < 100 ) {
 		foreach ( $lesson_ids as $_lid ) {
 			$_xapi = (int) get_post_meta( $_lid, 'show_xapi_content', true );
 			if ( $_xapi ) {
-				$_saved = (int) get_user_meta( $user_id, '_ls_scorm_progress_' . $_xapi, true );
-				if ( $_saved > $percent ) {
-					$percent = $_saved;
+				$_gb = ls_get_grassblade_progress( $_xapi, $user_id );
+				if ( $_gb > $percent ) {
+					$percent = $_gb;
 				}
 			}
 		}
@@ -507,15 +560,15 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 
 			$outline = ls_get_scorm_outline( $xapi_id );
 
-			// Outline: admin-only, one-time cache. Progress: all enrolled users.
-			$needs_outline  = empty( $outline ) && current_user_can( 'manage_options' );
-			$needs_progress = ( $percent < 100 );
-			if ( $needs_outline || $needs_progress ) {
+			// Outline titles: admin-only, one-time cache.
+			// Progress % comes from SCORM commit hook — no scraping needed per user.
+			$needs_outline = empty( $outline ) && current_user_can( 'manage_options' );
+			if ( $needs_outline ) {
 				$scrape_tasks[] = array(
 					'xapi_id'         => $xapi_id,
 					'launch_url'      => $launch_url,
-					'scrape_outline'  => $needs_outline,
-					'scrape_progress' => $needs_progress,
+					'scrape_outline'  => true,
+					'scrape_progress' => false,
 				);
 			}
 		}
@@ -523,11 +576,13 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 		$url = $launch_url ?: get_permalink( $lid );
 
 		$lesson_data[] = array(
-			'id'        => $lid,
-			'title'     => get_the_title( $lid ),
-			'url'       => $url,
-			'completed' => (bool) $complete,
-			'outline'   => $outline,
+			'id'           => $lid,
+			'title'        => get_the_title( $lid ),
+			'url'          => $url,
+			'completed'    => (bool) $complete,
+			'outline'      => $outline,
+			'xapi_id'      => $xapi_id,
+			'user_percent' => $xapi_id ? ls_get_grassblade_progress( $xapi_id, $user_id ) : 0,
 		);
 
 		if ( ! $complete && ! $next_lesson_id ) {
@@ -538,7 +593,24 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 
 	$course_complete   = ( $percent >= 100 && count( $lesson_data ) > 0 );
 	$next_lesson_title = $next_lesson_id ? get_the_title( $next_lesson_id ) : '';
-	$lesson_num_label  = $completed_count + 1;
+
+	// Use Rise outline modules for lesson label when available.
+	$rise_total = 0;
+	$rise_done  = 0;
+	foreach ( $lesson_data as $_ld ) {
+		if ( ! empty( $_ld['outline'] ) ) {
+			$_mods       = count( $_ld['outline'] );
+			$rise_total += $_mods;
+			$rise_done  += $_ld['user_percent'] > 0 ? (int) round( $_ld['user_percent'] / 100 * $_mods ) : 0;
+		}
+	}
+	if ( $rise_total > 0 ) {
+		$total_count      = $rise_total;
+		$lesson_num_label = min( $rise_done + 1, $rise_total );
+	} else {
+		$total_count      = $total_count > 0 ? $total_count : count( $lesson_ids );
+		$lesson_num_label = $completed_count + 1;
+	}
 
 	// --- About text: post content, else short desc ---
 	$post_content = wpautop( wp_kses_post( get_post_field( 'post_content', $course_id ) ) );
@@ -551,8 +623,20 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 	if ( $course_complete && function_exists( 'learndash_get_course_certificate_link' ) ) {
 		$cert_url = learndash_get_course_certificate_link( $course_id, $user_id );
 	}
+
+	$missing_outline = current_user_can( 'manage_options' ) && ! empty( $lesson_data ) && array_filter(
+		$lesson_data,
+		fn( $l ) => $l['xapi_id'] && empty( $l['outline'] )
+	);
 	?>
 	<div class="ls-course-dashboard-wrap">
+
+		<?php if ( $missing_outline ) : ?>
+		<div class="ls-admin-notice" role="alert">
+			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+			<strong>Admin only:</strong> Course outline not yet scraped. Stay on this page until it reloads automatically — this runs once and populates the curriculum for all users.
+		</div>
+		<?php endif; ?>
 
 		<?php /* ===== SIDEBAR ===== */ ?>
 		<aside class="ls-cd-sidebar">
@@ -589,22 +673,23 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 					<?php foreach ( $lesson_data as $item ) :
 						$has_outline = ! empty( $item['outline'] );
 						if ( $has_outline ) :
-							foreach ( $item['outline'] as $i => $entry ) :
-								$ol_title   = is_array( $entry ) ? ( $entry['title'] ?? '' ) : (string) $entry;
-								$ol_locked  = is_array( $entry ) && ! empty( $entry['locked'] );
-								$ol_current = is_array( $entry ) && ! empty( $entry['current'] );
+							$total_mods = count( $item['outline'] );
+						$user_pct   = $item['user_percent'];
+						$done_count = ( $total_mods > 0 && $user_pct > 0 )
+							? (int) round( $user_pct / 100 * $total_mods )
+							: 0;
+						foreach ( $item['outline'] as $i => $entry ) :
+								$ol_title = is_array( $entry ) ? ( $entry['title'] ?? '' ) : (string) $entry;
 
-								if ( $item['completed'] ) {
+								if ( $item['completed'] || $done_count >= $total_mods ) {
 									$state = 'done';
-								} elseif ( $ol_locked ) {
-									$state = 'locked';
-								} elseif ( $ol_current ) {
+								} elseif ( $i < $done_count ) {
+									$state = 'done';
+								} elseif ( $i === $done_count ) {
 									$state = 'current';
 								} else {
-									// Sequential course: not locked, not current = already passed through.
-									$state = 'done';
+									$state = 'locked';
 								}
-
 								$href = ( 'locked' === $state ) ? '#' : $item['url'];
 							?>
 							<a href="<?php echo esc_url( $href ); ?>"
@@ -785,28 +870,12 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 
 			var attempts    = 0;
 			var maxAttempts = 60;
-			var progressDone = ! task.scrape_progress;
-			var outlineDone  = ! task.scrape_outline;
+			var outlineDone = ! task.scrape_outline;
 
 			var poll = setInterval( function() {
 				attempts++;
 
-				// --- Progress ---
-				if ( ! progressDone ) {
-					var progEls = deepQueryAll( frame.contentWindow, '.nav-sidebar-header__progress-text', 4 );
-					if ( progEls.length ) {
-						progressDone = true;
-						var raw   = progEls[0].textContent || '';
-						var match = raw.match( /(\d+)/ );
-						if ( match ) {
-							var pct = Math.min( 100, Math.max( 0, parseInt( match[1], 10 ) ) );
-							updateProgressBar( pct );
-							post( 'ls_save_scorm_progress', { xapi_id: task.xapi_id, percent: pct } );
-						}
-					}
-				}
-
-				// --- Outline ---
+				// --- Outline titles (admin only, one-time) ---
 				if ( ! outlineDone ) {
 					var outlineEls = deepQueryAll( frame.contentWindow, '.nav-sidebar__outline-item__link', 4 );
 					if ( outlineEls.length ) {
@@ -819,28 +888,18 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 						];
 						var items = [];
 						outlineEls.forEach( function(el) {
-							var raw      = el.textContent || '';
-							var isLocked = lockPhrases.some( function(p) {
-								return raw.toLowerCase().indexOf( p.toLowerCase() ) !== -1;
-							} );
-							// Rise marks the active lesson with --active on the link element.
-							var isCurrent = el.classList.contains( 'nav-sidebar__outline-item__link--active' )
-								|| el.classList.contains( 'active' );
-							// Strip lock phrases to get the clean title.
-							var title = raw;
+							var title = el.textContent || '';
 							lockPhrases.forEach( function(p) {
 								title = title.replace( new RegExp( p, 'gi' ), '' );
 							} );
 							title = title.trim();
-							if ( title ) {
-								items.push( { title: title, locked: isLocked, current: isCurrent } );
-							}
+							if ( title ) items.push( { title: title } );
 						} );
 						if ( items.length ) {
 							post( 'ls_save_scorm_outline', { xapi_id: task.xapi_id, items: items } )
 								.then( function(data) {
 									if ( data.success ) {
-										document.body.removeChild( frame );
+										try { document.body.removeChild( frame ); } catch(e) {}
 										window.location.reload();
 									}
 								} );
@@ -849,8 +908,8 @@ function ls_render_course_dashboard( $course_id, $user_id, $product_id, $short_d
 					}
 				}
 
-				// Both done or timed out.
-				if ( ( progressDone && outlineDone ) || attempts >= maxAttempts ) {
+				// Done or timed out.
+				if ( outlineDone || attempts >= maxAttempts ) {
 					clearInterval( poll );
 					try { document.body.removeChild( frame ); } catch(e) {}
 				}
@@ -979,19 +1038,27 @@ function ls_scorm_bridge_ld_complete() {
 	if ( empty( $current_user->ID ) ) return;
 	if ( empty( $_REQUEST['params']['data'] ) || empty( $_REQUEST['params']['scorm_version'] ) ) return;
 
-	$data       = $_REQUEST['params']['data']; // phpcs:ignore WordPress.Security.NonceVerification
-	$scorm_ver  = sanitize_text_field( $_REQUEST['params']['scorm_version'] );
+	$data      = $_REQUEST['params']['data']; // phpcs:ignore WordPress.Security.NonceVerification
+	$scorm_ver = sanitize_text_field( $_REQUEST['params']['scorm_version'] );
 
-	// SCORM 1.2 uses cmi.core.lesson_status; SCORM 2004 uses cmi.completion_status.
-	$status_key  = ( '1.2' === $scorm_ver ) ? 'cmi.core.lesson_status'  : 'cmi.completion_status';
-	$content_key = ( '1.2' === $scorm_ver ) ? 'cmi.core.content_id'     : 'cmi.content_id';
+	$status_key  = ( '1.2' === $scorm_ver ) ? 'cmi.core.lesson_status' : 'cmi.completion_status';
+	$content_key = ( '1.2' === $scorm_ver ) ? 'cmi.core.content_id'    : 'cmi.content_id';
+	$score_key   = ( '1.2' === $scorm_ver ) ? 'cmi.core.score.raw'     : 'cmi.score.raw';
 
-	if ( empty( $data[ $status_key ] ) ) return;
-	if ( ! in_array( $data[ $status_key ], array( 'completed', 'passed' ), true ) ) return;
 	if ( empty( $data[ $content_key ] ) ) return;
 
 	$content_id = (int) $data[ $content_key ];
 	$user_id    = (int) $current_user->ID;
+
+	// Save progress % on every commit — Rise sets score.raw to completion percentage.
+	if ( isset( $data[ $score_key ] ) && is_numeric( $data[ $score_key ] ) ) {
+		$pct = min( 100, max( 0, (int) round( (float) $data[ $score_key ] ) ) );
+		update_user_meta( $user_id, '_ls_scorm_progress_' . $content_id, $pct );
+	}
+
+	// Full completion: mark LD lesson complete.
+	if ( empty( $data[ $status_key ] ) ) return;
+	if ( ! in_array( $data[ $status_key ], array( 'completed', 'passed' ), true ) ) return;
 
 	// Guard: only fire once per content per user.
 	$flag = 'ls_scorm_ld_completed_' . $content_id;
@@ -1105,4 +1172,67 @@ function ls_dequeue_ld_assets() {
 
 	// wp_dequeue_style( 'learndash-front' );   // main LD front-end CSS
 	// wp_dequeue_style( 'sfwd-module-css' );   // module styles
+}
+
+// ---------------------------------------------------------------------------
+// WP Admin: SCORM outline status column on LearnDash courses list.
+// Shows per-course whether the module titles have been scraped yet.
+// ---------------------------------------------------------------------------
+add_filter( 'manage_sfwd-courses_posts_columns', 'ls_courses_add_outline_column' );
+function ls_courses_add_outline_column( $columns ) {
+	$columns['ls_scorm_outline'] = 'SCORM Outline';
+	return $columns;
+}
+
+add_action( 'manage_sfwd-courses_posts_custom_column', 'ls_courses_outline_content', 10, 2 );
+function ls_courses_outline_content( $column, $post_id ) {
+	if ( 'ls_scorm_outline' !== $column ) return;
+
+	$lesson_ids = get_posts( array(
+		'post_type'      => 'sfwd-lessons',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'post_status'    => 'publish',
+		'meta_query'     => array(
+			array( 'key' => 'course_id', 'value' => $post_id ),
+		),
+	) );
+
+	if ( empty( $lesson_ids ) ) {
+		echo '<span style="color:#999;">— No lessons</span>';
+		return;
+	}
+
+	$has_scorm   = false;
+	$all_scraped = true;
+	$missing     = array();
+
+	foreach ( $lesson_ids as $lid ) {
+		$xapi_id = (int) get_post_meta( $lid, 'show_xapi_content', true );
+		if ( ! $xapi_id ) continue;
+		$has_scorm = true;
+		$outline   = get_post_meta( $xapi_id, '_ls_scorm_outline', true );
+		if ( ! $outline ) {
+			$all_scraped = false;
+			$missing[]   = get_the_title( $lid );
+		}
+	}
+
+	if ( ! $has_scorm ) {
+		echo '<span style="color:#999;">— No SCORM</span>';
+		return;
+	}
+
+	if ( $all_scraped ) {
+		echo '<span style="color:#46b450;">&#10003; Scraped</span>';
+	} else {
+		$tip = implode( ', ', $missing );
+		echo '<span style="color:#dc3232;" title="' . esc_attr( 'Missing: ' . $tip ) . '">&#10007; Not scraped</span>';
+	}
+}
+
+add_filter( 'manage_edit-sfwd-courses_sortable_columns', 'ls_courses_outline_sortable' );
+function ls_courses_outline_sortable( $columns ) {
+	$columns['ls_scorm_outline'] = 'ls_scorm_outline';
+	return $columns;
 }

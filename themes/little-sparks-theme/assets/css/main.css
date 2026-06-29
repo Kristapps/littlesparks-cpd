@@ -57,13 +57,13 @@
 
 /* ---- 2. Base reset ---- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { overflow-x: hidden; max-width: 100%; }
+html { overflow-x: clip; max-width: 100%; }
 body {
     font-family: var(--font-main);
     background-color: var(--clr-bg);
     color: var(--clr-text-main);
     line-height: 1.5;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
     -webkit-font-smoothing: antialiased;
 }
@@ -1256,6 +1256,10 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 	padding: 0 1.5rem 5rem;
 }
 
+.ls-course-preview [class*="learndash-shortcode-wrap-ld_infobar"],
+.ls-course-preview .ld-item-list.ld-lesson-list,
+.ls-course-preview .ld-tabs-navigation { display: none !important; }
+
 .ls-cp-breadcrumb {
 	display: flex;
 	align-items: center;
@@ -1270,7 +1274,7 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 .ls-cp-breadcrumb a:hover { color: var(--clr-dark); }
 .ls-cp-breadcrumb span[aria-current="page"] { color: var(--clr-text-main); font-weight: 600; }
 
-.ls-cp-header { margin-bottom: 2rem; display: flex; flex-direction: column; align-items: flex-start; }
+.ls-cp-header { padding: 0; margin-bottom: 1.75rem; display: flex; flex-direction: column; align-items: flex-start; }
 
 .ls-cp-header-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
 
@@ -1455,7 +1459,8 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 
 .ls-cp-sidebar {
 	position: sticky;
-	top: 100px;
+	top: 2rem;
+	align-self: start;
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
@@ -1612,6 +1617,21 @@ body.ls-course-dashboard .learndash_mark_complete_button { display: none !import
 
 /* Sticky sidebar */
 .ls-cd-sidebar { position: sticky; top: 90px; }
+
+.ls-admin-notice {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	background: #fff8e1;
+	border: 1.5px solid #f5ac39;
+	border-radius: var(--radius-card);
+	padding: 1rem 1.25rem;
+	font-size: 0.9rem;
+	color: #7a4d00;
+	margin-bottom: 1.5rem;
+}
+.ls-admin-notice svg { flex-shrink: 0; margin-top: 0.1rem; color: #f5ac39; }
 
 /* Base card */
 .ls-cd-card {
