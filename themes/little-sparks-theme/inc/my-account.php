@@ -93,7 +93,7 @@ function ls_render_my_course_card( $course_id, $user_id ) {
 			'numberposts' => -1,
 			'fields'      => 'ids',
 			'meta_query'  => array( array(
-				'key'   => 'lesson_course_id',
+				'key'   => 'course_id',
 				'value' => $course_id,
 			) ),
 		) );
