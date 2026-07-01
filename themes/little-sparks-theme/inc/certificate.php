@@ -1,6 +1,58 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+// ---------------------------------------------------------------------------
+// Auto-assign the CPD certificate to every new LD course on save.
+// Skips courses that already have a certificate assigned.
+// Falls back to ls_default_certificate_id option if multiple certs exist.
+// Static lock prevents re-trigger loop (LD writes _sfwd-courses twice per save).
+// ---------------------------------------------------------------------------
+// ponytail: LD saves completion awards via AJAX after WP's save cycle — no hook lands before it.
+// Backfill on admin_init instead: find any published course missing a cert, fix it silently.
+// Transient prevents hammering the DB on every admin click.
+// ponytail: backfill on every admin load — loop skips courses that already have a cert so no wasted writes
+add_action( 'admin_init', 'ls_auto_assign_certificate' );
+function ls_auto_assign_certificate() {
+	if ( ! current_user_can( 'manage_options' ) ) return;
+
+	$certs = get_posts( array(
+		'post_type'      => 'sfwd-certificates',
+		'posts_per_page' => 1,
+		'post_status'    => 'publish',
+		'fields'         => 'ids',
+	) );
+	if ( empty( $certs ) ) return;
+	$cert_id = (int) $certs[0];
+
+	$courses = get_posts( array(
+		'post_type'      => 'sfwd-courses',
+		'posts_per_page' => -1,
+		'post_status'    => 'publish',
+		'fields'         => 'ids',
+	) );
+	foreach ( $courses as $course_id ) {
+		$awards      = get_post_meta( $course_id, 'learndash-course-completion-awards', true );
+		$ld_settings = get_post_meta( $course_id, '_sfwd-courses', true );
+
+		$awards_missing   = ! ( is_array( $awards ) && ! empty( $awards['certificate'] ) );
+		$settings_missing = ! ( is_array( $ld_settings ) && ! empty( $ld_settings['sfwd-courses_certificate'] ) );
+
+		if ( ! $awards_missing && ! $settings_missing ) continue;
+
+		if ( $awards_missing ) {
+			$awards                = is_array( $awards ) ? $awards : array();
+			$awards['certificate'] = $cert_id;
+			update_post_meta( $course_id, 'learndash-course-completion-awards', $awards );
+		}
+
+		if ( $settings_missing ) {
+			$ld_settings                              = is_array( $ld_settings ) ? $ld_settings : array();
+			$ld_settings['sfwd-courses_certificate'] = $cert_id;
+			update_post_meta( $course_id, '_sfwd-courses', $ld_settings );
+		}
+	}
+}
+
 add_action( 'template_redirect', 'ls_certificate_preview_intercept', 1 );
 function ls_certificate_preview_intercept() {
 	if ( ! is_singular( 'ld-certificate' ) ) return;

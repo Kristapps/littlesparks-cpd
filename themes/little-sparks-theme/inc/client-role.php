@@ -79,11 +79,12 @@ function ls_restrict_client_admin_menu() {
 	}
 }
 
-// Allow client role through WooCommerce's wp-admin block (logged-in redirect).
+// Allow client role and administrators through WooCommerce's wp-admin block.
 add_filter( 'woocommerce_prevent_admin_access', 'ls_allow_client_admin_access' );
 function ls_allow_client_admin_access( $prevent ) {
-	$user = wp_get_current_user();
-	if ( in_array( 'little_sparks_admin', (array) $user->roles, true ) ) {
+	$user  = wp_get_current_user();
+	$roles = (array) $user->roles;
+	if ( in_array( 'administrator', $roles, true ) || in_array( 'little_sparks_admin', $roles, true ) ) {
 		return false;
 	}
 	return $prevent;
