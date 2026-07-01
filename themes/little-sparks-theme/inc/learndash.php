@@ -1245,3 +1245,36 @@ function ls_courses_outline_sortable( $columns ) {
 	$columns['ls_scorm_outline'] = 'ls_scorm_outline';
 	return $columns;
 }
+
+// ---------------------------------------------------------------------------
+// Certificate shortcodes.
+// Store cert context (user + course) from LD's generation hook so shortcodes
+// can access it during PDF render.
+// ---------------------------------------------------------------------------
+$GLOBALS['ls_cert_user_id']   = 0;
+$GLOBALS['ls_cert_course_id'] = 0;
+
+add_action( 'learndash_tcpdf_init', function( $cert_args ) {
+	$GLOBALS['ls_cert_user_id']   = (int) ( $cert_args['user_id'] ?? 0 );
+	$GLOBALS['ls_cert_course_id'] = (int) ( $cert_args['post_id'] ?? 0 );
+}, 1 );
+
+add_shortcode( 'ls_cert_name', function() {
+	$uid  = $GLOBALS['ls_cert_user_id'] ?: get_current_user_id();
+	$user = get_userdata( $uid );
+	return $user ? esc_html( $user->display_name ) : '';
+} );
+
+add_shortcode( 'ls_cert_course', function() {
+	$cid = $GLOBALS['ls_cert_course_id'] ?? 0;
+	return $cid ? esc_html( get_the_title( $cid ) ) : '';
+} );
+
+add_shortcode( 'ls_cert_logo', function() {
+	$url = home_url( '/wp-content/uploads/2026/04/little-sparks-logo.png' );
+	return '<img src="' . esc_url( $url ) . '" alt="Little Sparks eLearning" style="height:40px; width:auto;">';
+} );
+
+add_shortcode( 'ls_cert_issued', function() {
+	return date_i18n( 'j F Y' );
+} );

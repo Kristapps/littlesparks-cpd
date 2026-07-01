@@ -172,3 +172,123 @@ function ls_render_my_course_card( $course_id, $user_id ) {
 	</div>
 	<?php
 }
+
+// ---------------------------------------------------------------------------
+// Certificate Lookup — visible only to little_sparks_admin role.
+// ---------------------------------------------------------------------------
+add_action( 'init', 'ls_register_cert_lookup_endpoint' );
+function ls_register_cert_lookup_endpoint() {
+	add_rewrite_endpoint( 'certificate-lookup', EP_ROOT | EP_PAGES );
+}
+
+add_filter( 'woocommerce_get_query_vars', 'ls_cert_lookup_query_var' );
+function ls_cert_lookup_query_var( $vars ) {
+	$vars['certificate-lookup'] = 'certificate-lookup';
+	return $vars;
+}
+
+add_filter( 'woocommerce_account_menu_items', 'ls_cert_lookup_menu_item' );
+function ls_cert_lookup_menu_item( $items ) {
+	if ( ! current_user_can( 'little_sparks_admin' ) ) {
+		return $items;
+	}
+	$items['certificate-lookup'] = __( 'Certificate Lookup', 'little-sparks' );
+	return $items;
+}
+
+add_action( 'woocommerce_account_certificate-lookup_endpoint', 'ls_cert_lookup_content' );
+function ls_cert_lookup_content() {
+	if ( ! current_user_can( 'little_sparks_admin' ) ) {
+		echo '<p>' . esc_html__( 'You do not have permission to view this page.', 'little-sparks' ) . '</p>';
+		return;
+	}
+
+	$result = null;
+
+	if ( isset( $_POST['ls_cert_number'] ) && check_admin_referer( 'ls_cert_lookup', 'ls_cert_nonce' ) ) {
+		$result = ls_cert_lookup_decode( sanitize_text_field( wp_unslash( $_POST['ls_cert_number'] ) ) );
+	}
+
+	?>
+	<div class="ls-cert-lookup">
+		<h2><?php esc_html_e( 'Certificate Lookup', 'little-sparks' ); ?></h2>
+		<p><?php esc_html_e( 'Enter a certificate number to verify its authenticity.', 'little-sparks' ); ?></p>
+
+		<form method="post" class="ls-cert-lookup-form">
+			<?php wp_nonce_field( 'ls_cert_lookup', 'ls_cert_nonce' ); ?>
+			<div class="ls-cert-lookup-row">
+				<label for="ls_cert_number"><?php esc_html_e( 'Certificate Number', 'little-sparks' ); ?></label>
+				<input
+					type="text"
+					id="ls_cert_number"
+					name="ls_cert_number"
+					placeholder="LS-2026-00010001"
+					value="<?php echo isset( $_POST['ls_cert_number'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['ls_cert_number'] ) ) ) : ''; ?>"
+					class="ls-cert-lookup-input"
+					autocomplete="off"
+				>
+				<button type="submit" class="ls-btn ls-btn-primary"><?php esc_html_e( 'Verify', 'little-sparks' ); ?></button>
+			</div>
+		</form>
+
+		<?php if ( null !== $result ) : ?>
+		<div class="ls-cert-lookup-result <?php echo $result['valid'] ? 'ls-cert-valid' : 'ls-cert-invalid'; ?>">
+			<?php if ( $result['valid'] ) : ?>
+				<div class="ls-cert-badge ls-cert-badge-valid">&#10003; Valid Certificate</div>
+				<dl class="ls-cert-details">
+					<dt><?php esc_html_e( 'Learner', 'little-sparks' ); ?></dt>
+					<dd><?php echo esc_html( $result['learner'] ); ?></dd>
+					<dt><?php esc_html_e( 'Course', 'little-sparks' ); ?></dt>
+					<dd><?php echo esc_html( $result['course'] ); ?></dd>
+					<dt><?php esc_html_e( 'Date Completed', 'little-sparks' ); ?></dt>
+					<dd><?php echo esc_html( $result['completed'] ); ?></dd>
+				</dl>
+			<?php else : ?>
+				<div class="ls-cert-badge ls-cert-badge-invalid">&#10007; <?php echo esc_html( $result['message'] ); ?></div>
+			<?php endif; ?>
+		</div>
+		<?php endif; ?>
+	</div>
+	<?php
+}
+
+function ls_cert_lookup_decode( string $cert_no ): array {
+	if ( ! preg_match( '/^LS-(\d{4})-(\d{4})(\d{3})$/', $cert_no, $m ) ) {
+		return array( 'valid' => false, 'message' => 'Invalid certificate number format.' );
+	}
+
+	$user_id   = (int) $m[2];
+	$course_id = (int) $m[3];
+
+	$user = get_userdata( $user_id );
+	if ( ! $user ) {
+		return array( 'valid' => false, 'message' => 'Certificate not found.' );
+	}
+
+	$course = get_post( $course_id );
+	if ( ! $course || 'sfwd-courses' !== $course->post_type || 'publish' !== $course->post_status ) {
+		return array( 'valid' => false, 'message' => 'Certificate not found.' );
+	}
+
+	if ( ! function_exists( 'learndash_course_completed' ) || ! learndash_course_completed( $user_id, $course_id ) ) {
+		return array( 'valid' => false, 'message' => 'No completion record found for this certificate.' );
+	}
+
+	global $wpdb;
+	$timestamp = $wpdb->get_var( $wpdb->prepare(
+		"SELECT activity_completed FROM {$wpdb->prefix}learndash_user_activity
+		 WHERE user_id = %d AND post_id = %d AND activity_type = 'course' AND activity_status = 1
+		 ORDER BY activity_completed DESC LIMIT 1",
+		$user_id,
+		$course_id
+	) );
+
+	$completed_date = $timestamp ? ls_cert_ordinal_date( date_i18n( 'j F Y', (int) $timestamp ) ) : 'Date unavailable';
+
+	return array(
+		'valid'     => true,
+		'learner'   => $user->display_name,
+		'course'    => get_the_title( $course_id ),
+		'completed' => $completed_date,
+	);
+}

@@ -1248,7 +1248,82 @@ h1 span::after { content:''; position:absolute; bottom:8px; left:0; width:100%; 
 	.ls-account-stats { gap: 0.75rem; }
 }
 
-/* ---- 23. LD Course — non-enrolled landing page ---- */
+/* ---- 23. Certificate Lookup ---- */
+
+.ls-cert-lookup h2 {
+	margin-bottom: 0.5rem;
+	color: var(--clr-text-main);
+}
+.ls-cert-lookup > p {
+	color: var(--clr-text-muted);
+	margin-bottom: 1.5rem;
+}
+.ls-cert-lookup-form { margin-bottom: 1.5rem; }
+.ls-cert-lookup-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: flex-end;
+}
+.ls-cert-lookup-row label {
+	display: block;
+	width: 100%;
+	font-weight: 600;
+	color: var(--clr-text-main);
+	margin-bottom: 0.25rem;
+}
+.ls-cert-lookup-input {
+	flex: 1 1 260px;
+	padding: 0.6rem 0.875rem;
+	border: 1.5px solid var(--clr-border);
+	border-radius: 8px;
+	font-size: 1rem;
+	font-family: inherit;
+	color: var(--clr-text-main);
+	background: var(--clr-surface);
+	letter-spacing: 0.03em;
+}
+.ls-cert-lookup-input:focus {
+	outline: none;
+	border-color: var(--clr-dark);
+	box-shadow: 0 0 0 3px rgba(148,57,212,0.12);
+}
+.ls-cert-lookup-result {
+	border-radius: 12px;
+	padding: 1.5rem;
+	margin-top: 0.5rem;
+}
+.ls-cert-valid  { background: #f0faf0; border: 1.5px solid #4caf50; }
+.ls-cert-invalid { background: #fff5f5; border: 1.5px solid #e53935; }
+
+.ls-cert-badge {
+	font-weight: 700;
+	font-size: 1.05rem;
+	margin-bottom: 1rem;
+}
+.ls-cert-badge-valid  { color: #2e7d32; }
+.ls-cert-badge-invalid { color: #c62828; }
+
+.ls-cert-details {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.4rem 1.25rem;
+	margin: 0;
+}
+.ls-cert-details dt {
+	font-weight: 600;
+	color: var(--clr-text-muted);
+	font-size: 0.875rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.ls-cert-details dd {
+	margin: 0;
+	color: var(--clr-text-main);
+	font-size: 0.95rem;
+}
+
+/* ---- 24. LD Course — non-enrolled landing page ---- */
 
 .ls-cp-wrap {
 	max-width: 1240px;
